@@ -23,6 +23,8 @@ namespace OCA\secure_container\Db;
 
 use \OCP\IDb;
 use \OCP\AppFramework\Db\Mapper;
+use \OCA\secure_container\Db\Path;
+use \OCA\secure_container\Db\PathTree;
 
 class PathMapper extends Mapper {
 	private $table = 'secure_cont_path';
@@ -51,7 +53,7 @@ class PathMapper extends Mapper {
 	/**
 	 * Get the path entity identified by the given id
 	 * 
-	 * @param int ID of the path to get
+	 * @param int id ID of the path to get
 	 * 
 	 * @return \OCA\secure_container\Db\Path
 	 * 
@@ -74,6 +76,39 @@ class PathMapper extends Mapper {
 	public function findAll($limit = null, $offset = null) {
 		$sql = 'SELECT * FROM `*PREFIX*' . $this->table . '` WHERE `uid` = ?;';
 		return $this->findEntities($sql, array($this->uid), $limit, $offset);
+	}
+	
+	/**
+	 * Get a list of all child path entries
+	 * 
+	 * @param int parent The path id fromw hich the children should be returned
+	 * @param int limit (Optional) Maximum number of entries
+	 * @param int offset (Optional) Num of entries to leave out
+	 * 
+	 * @return array[\OCA\secure_container\Db\Path]
+	 */
+	public function findChildren($parent) {
+		$sql = 'SELECT * FROM `*PREFIX*' . $this->table . '` WHERE `uid` = ? AND `parent` = ?;';
+		return $this->findEntities($sql, array($this->uid, intval($parent)));
+	}
+	
+	/**
+	 * Get a recursivelist of all entries, starting with a given parent and depth
+	 * 
+	 * @param int pathId (Optional) The path entry to get all children from
+	 * 
+	 * @return array[\OCA\secure_container\Db\PathTree]
+	 */
+	public function findPathTree($pathId = 0) {
+		$tree = array();
+		
+		$sql = 'SELECT `id` FROM `*PREFIX*' . $this->table . '` WHERE `uid` = ? AND `parent` = ?;';
+		$result = $this->execute($sql, array($this->uid, intval($pathId)));
+		
+		while ($row = $result->fetch(\PDO::FETCH_NUM)) {
+			$tree[] = new PathTree($row[0], $this);
+		}
+		return $tree;
 	}
 	
 }

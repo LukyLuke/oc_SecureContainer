@@ -28,7 +28,11 @@
 ?>
 
 <div id="app-navigation">
-	Files categories
+	<ul class="level-0">
+		<?php foreach ($_['navigation'] as $k => $path): ?>
+		<?php print_unescaped($this->inc('pathentry', array('path' => $path, 'level'=> 1))); ?>
+		<?php endforeach; ?>
+	</ul>
 </div>
 
 <main id="app-content">

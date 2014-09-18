@@ -59,6 +59,9 @@ class PageController extends Controller {
 	public function index() {
 		$params = array('user' => $this->userId);
 		
+		// Get all pathes and create an appropriate structure to use in the templates.
+		$params['navigation'] = $this->pathMapper->findPathTree();
+		
 		// Sytstem wide values
 		//$this->config->setSystemValue('foo', 'bar');
 		//$this->config->getSystemValue('foo');
@@ -119,11 +122,38 @@ class PageController extends Controller {
 	 * @NoAdminRequired
 	 */
 	public function save($guid) {
-		$data = $this->request->post;
 		try {
-			$response = (object) array('foo' => 'bar');
+			// Check for a valid post data format
+			$data = (object) $this->request->post;
+			if (!is_object($data) || !isset($data->name)) {
+				throw new \Exception('Invalid data posted for create a new entry in SecureContainer.');
+			}
 			
-			return new JSONResponse($response);
+			// Create or Update the entity.
+			if ($this->contentMapper->exists($guid)) {
+				$entity = $this->contentMapper->find($guid);
+				$entity->setName($data->name);
+				$entity->setPath(intval($data->section));
+				$entity->setValue($data->value);
+				$entity->setDescription($data->description);
+				$entity = $this->contentMapper->update($entity);
+			}
+			else {
+				$entity = new Content();
+				$entity->setUid($this->userId);
+				$entity->setName($data->name);
+				$entity->setPath(intval($data->section));
+				$entity->setValue($data->value);
+				$entity->setDescription($data->description);
+				$entity = $this->contentMapper->insert($entity);
+			}
+			return new JSONResponse($entity);
+			
+			// Create the response
+			$response = $this->getResponseSkeleton('content');
+			$this->appendContentEvent('edit', array(
+				'guid' => $entity->getId(),
+				), $response);
 		} catch (\Exception $ex) {
 			return $this->createResponseException($ex, 'content', Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
@@ -160,7 +190,7 @@ class PageController extends Controller {
 			// Check for a valid post data format
 			$data = (object) $this->request->post;
 			if (!is_object($data) || !isset($data->name)) {
-				throw new \Exception('Invalid data posted for create a new pathin SecureContainer.');
+				throw new \Exception('Invalid data posted for create a new path in SecureContainer.');
 			}
 			
 			// Create or Update the entity.
@@ -184,8 +214,7 @@ class PageController extends Controller {
 				'guid' => $entity->getId(),
 				'parent' => $entity->getParent(),
 				'name' => $entity->getName(),
-			), $response);
-			
+				), $response);
 			return new JSONResponse($response);
 		} catch (\Exception $ex) {
 			return $this->createResponseException($ex, 'section', Http::STATUS_INTERNAL_SERVER_ERROR);
