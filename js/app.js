@@ -34,7 +34,7 @@
 		 */
 		_setupEvents: function() {
 			this.navigation.on('createSection', _.bind(this._createSection, this));
-			this.navigation.on('createContent', _.bind(this._createEntry, this));
+			this.navigation.on('createContent', _.bind(this._createContent, this));
 			this.navigation.on('sectionChanged', _.bind(this._sectionChanged, this));
 		},
  
@@ -60,16 +60,17 @@
 		 * 
 		 * @param Event ev The event object which was triggered
 		 */
-		_createEntry: function(ev) {
+		_createContent: function(ev) {
 			var url = OC.generateUrl('/apps/secure_container/save/new');
-			console.debug('CreateEntry', ev);
-			/*var data = {
-				data: value,
-				type: type
-			};
-			$.post(url, data).success(function(response) {
-				console.debug(response);
-			}, 'json');*/
+			var data = ev.eventData;
+			data.section = this.navigation.getActiveItem();
+			$.ajax(url, {
+				type: 'POST',
+				data: JSON.stringify(data),
+				contentType: 'application/json; charset=UTF-8',
+				success: _.bind(this._parseResponse, this),
+				dataType: 'json'
+			});
 		},
  
 		/**
@@ -90,8 +91,22 @@
 		 * @param Object|string response The JSON Response or a string for some reason
 		 */
 		_parseResponse: function(response) {
-			if (typeof(response) === 'object') {
+			if ((response !== null) && (typeof(response) === 'object')) {
+				if (response.navigation) {
+					$.each(response.navigation, _.bind(function(key, value) {
+						if (value.event && value.data) {
+							this.navigation.trigger(value.event, value.data);
+						}
+					}, this));
+				}
 				
+				if (response.content) {
+					$.each(response.content, _.bind(function(key, value) {
+						if (value.event && value.data) {
+							this.contents.trigger(value.event, value.data);
+						}
+					}, this));
+				}
 			} else {
 				console.warn('The response was not of type "Object/JSON". Ther was occurred and error on your server or an invalid action was called.');
 			}

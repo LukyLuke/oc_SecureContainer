@@ -110,7 +110,7 @@
 		 * @return item ID
 		 */
 		getActiveItem: function() {
-			return this._activeItem || '';
+			return this._activeItem || '0';
 		},
 
 		/**
@@ -172,7 +172,7 @@
 							this.trigger('createSection', { name: value });
 							break;
 						case 'container':
-							this.trigger('createEntry', { name: value });
+							this.trigger('createContent', { name: value });
 							break;
 					}
 				}

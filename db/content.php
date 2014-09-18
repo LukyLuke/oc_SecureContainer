@@ -23,8 +23,9 @@ namespace OCA\secure_container\Db;
 
 use \OCP\AppFramework\Db\Entity;
 
-class Contet extends Entity {
+class Content extends Entity {
 	protected $path;
+	protected $name;
 	protected $description;
 	protected $value;
 	protected $uid;
