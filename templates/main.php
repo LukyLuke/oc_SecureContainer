@@ -28,7 +28,7 @@
 ?>
 
 <div id="app-navigation">
-	<ul class="level-0">
+	<ul class="level-0 path-childs" id="path-childs-0">
 		<?php foreach ($_['navigation'] as $k => $path): ?>
 		<?php print_unescaped($this->inc('pathentry', array('path' => $path, 'level'=> 1))); ?>
 		<?php endforeach; ?>

@@ -23,10 +23,26 @@ namespace OCA\secure_container\Db;
 
 use \OCP\AppFramework\Db\Entity;
 
-class Content extends Entity {
+class Content extends Entity implements \JsonSerializable {
 	protected $path;
 	protected $name;
 	protected $description;
 	protected $value;
 	protected $uid;
+	
+	/**
+	 * Interface JsonSerializable: Returns a data object which can be json encoded
+	 * 
+	 * @return object
+	 */
+	public function jsonSerialize() {
+		return (object) array(
+			'id' => $this->id,
+			'path' => $this->path,
+			'name' => $this->name,
+			'description' => $this->description,
+			'value' => $this->value,
+			'uid' => $this->uid
+		);
+	}
 }

@@ -46,7 +46,7 @@
 		/**
 		 * Adds an event handler
 		 *
-		 * @param {String} eventName event name
+		 * @param string eventName event name
 		 * @param Function callback
 		 */
 		on: function(eventName, callback) {
@@ -56,7 +56,7 @@
 		/**
 		 * Removes an event handler
 		 *
-		 * @param {String} eventName event name
+		 * @param string eventName event name
 		 * @param Function callback
 		 */
 		off: function(eventName, callback) {
@@ -66,18 +66,50 @@
 		/**
 		 * Triggers an event for all subscribers
 		 * 
-		 * @param {String} eventName event name
+		 * @param string eventName event name
 		 * @param Object data Event data
 		 */
 		trigger: function(eventName, data) {
-			this.$el.trigger(new $.Event(eventName, data));
+			this.$el.trigger(new $.Event(eventName, { eventData: data }));
 		},
 
 		/**
 		 * Setup UI events
 		 */
 		_setupEvents: function() {
+			// Event for editing an entry.
 			//this.$el.on('click', 'article', _.bind(this._onClickItem, this));
+			
+			// Events for replace and update content entries
+			this.on('replace', _.bind(this._replaceContent, this));
+			this.on('insert', _.bind(this._insertContent, this));
+			this.on('clear', _.bind(function() {
+				this.$el.empty();
+			}, this));
+		},
+ 
+		/**
+		 * Inserting all content from the event data on the bottom of the container
+		 * 
+		 * @param Object ev The triggered Event
+		 */
+		_insertContent: function(ev) {
+			$.each(ev.eventData, _.bind(function(k, entry) {
+				var $entry = $('<section class="secure-entry secure-zebra-' + (k%2 ? 'even' : 'odd') + '" id="entry-' + entry.id + '" data-encrypted="' + (entry.value === null ? '' : entry.value) + '"></section>');
+				var $name = $('<div class="secure-entry-name">' + entry.name + '</div>').prepend($('<div class="secure-entry-decrypt icon-password svg"> </div>'));
+				var $description = $('<div class="secure-entry-description">' + (entry.description === null ? '' : entry.description) + '</div>');
+				$entry.append($name).append($description);
+				this.$el.append($entry);
+			}, this));
+		},
+ 
+		/**
+		 * Replaces one content which is identified by the id dataproperty
+		 * 
+		 * @param Object ev The triggered Event
+		 */
+		_replaceContent: function(ev) {
+			
 		},
 
 		last: null

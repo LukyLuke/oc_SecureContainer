@@ -60,7 +60,7 @@ class ContentMapper extends Mapper {
 	 */
 	public function find($id) {
 		$sql = 'SELECT * FROM `*PREFIX*' . $this->table . '` WHERE `id` = ? AND `uid` = ?;';
-		return $this->findEntity($sql, array($id));
+		return $this->findEntity($sql, array(intval($id)));
 	}
 	
 	/**
@@ -76,7 +76,7 @@ class ContentMapper extends Mapper {
 	 */
 	public function findAll($path, $limit = null, $offset = null) {
 		$sql = 'SELECT * FROM `*PREFIX*' . $this->table . '` WHERE `path` = ? AND `uid` = ?;';
-		return $this->findEntities($sql, array($path, $this->uid), $limit, $offset);
+		return $this->findEntities($sql, array(intval($path), $this->uid), $limit, $offset);
 	}
 	
 	/**

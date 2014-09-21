@@ -88,12 +88,14 @@ class PageController extends Controller {
 	 * @NoAdminRequired
 	 */
 	public function entries($path) {
-		$response = array('foo' => 'bar');
+		$entries = $this->contentMapper->findAll($path);
+		$response = $this->getResponseSkeleton('list');
+		$this->appendContentEvent('clear', null, $response);
+		$this->appendContentEvent('insert', $entries, $response);
 		
 		$this->registerResponder('xml', function($value) {
 			return new XMLResponse($value);
 		});
-		
 		return new JSONResponse($response);
 	}
 	
@@ -109,6 +111,9 @@ class PageController extends Controller {
 	public function show($guid) {
 		$response = (object) array('foo' => 'bar');
 		
+		$this->registerResponder('xml', function($value) {
+			return new XMLResponse($value);
+		});
 		return new JSONResponse($response);
 	}
 	
@@ -172,7 +177,6 @@ class PageController extends Controller {
 		$this->registerResponder('xml', function($value) {
 			return new XMLResponse($value);
 		});
-		
 		return new JSONResponse($response);
 	}
 	
@@ -249,7 +253,7 @@ class PageController extends Controller {
 		$response->navigation[] = (object) array(
 			'event' => $event,
 			'data' => (object) $data,
-			);
+		);
 	}
 	
 	/**
@@ -266,7 +270,7 @@ class PageController extends Controller {
 		$response->content[] = (object) array(
 			'event' => $event,
 			'data' => (object) $data,
-			);
+		);
 	}
 	
 	/**

@@ -90,7 +90,13 @@
 		 * Setup UI events
 		 */
 		_setupEvents: function() {
-			this.$el.on('click', 'li a', _.bind(this._onClickItem, this));
+			// Change the path by clicking on a section or by an external event.
+			this.$el.on('click', 'li', _.bind(this._onClickItem, this));
+			this.on('sectionChange', _.bind(function(ev) {
+				this.setActiveItem(ev.itemId);
+			}, this));
+			
+			// Breadcrum menu for create new things
 			this.$breadcrumb.on('click', '#new a', _.bind(this._onClickNew, this));
 			this.$breadcrumb.on('click', '#new ul li', _.bind(this._onClickNewEntry, this));
 		},
@@ -125,9 +131,15 @@
 				return;
 			}
 
-			this.$el.find('li').removeClass('active');
+			this.$el.find('.active').removeClass('active');
 			this._activeItem = itemId;
-			this.$el.find('li[data-id=' + itemId + ']').addClass('active');
+			
+			var $childs = this.$el.find('#path-entry-' + itemId + ' > ul');
+			$childs.parents('ul.path-childs').addClass('active');
+			$childs.addClass('active');
+			this.$el.find('.level-0.path-childs').removeClass('active');
+			this.$el.find('#path-entry-' + itemId + ' > .path-label').addClass('active');
+			
 			this.trigger('sectionChanged', { section: itemId, previousSection: oldItemId});
 		},
 
@@ -136,7 +148,7 @@
 		 */
 		_onClickItem: function(ev) {
 			var $target = $(ev.currentTarget);
-			this.setActiveItem($target.attr('data-id'));
+			this.setActiveItem($target.data('id'));
 			return false;
 		},
 

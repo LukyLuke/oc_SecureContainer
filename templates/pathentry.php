@@ -22,8 +22,8 @@
 $path = $_['path'];
 $level = intval($_['level']);
 ?>
-<li class="" data-uid="<?php p($path->getId()); ?>"><span class=""><?php p($path->getName()); ?></span>
-	<ul class="level-<?php p($level); ?>">
+<li class="icon-filetype-folder svg" id="path-entry-<?php p($path->getId()); ?>" data-id="<?php p($path->getId()); ?>"><span class="path-label"><?php p($path->getName()); ?></span>
+	<ul class="level-<?php p($level); ?> path-childs" id="path-childs-<?php p($level); ?>">
 		<?php foreach ($path as $k => $child): ?>
 		<?php print_unescaped($this->inc('pathentry', array('path' => $child, 'level'=> $level + 1))); ?>
 		<?php endforeach; ?>

@@ -78,3 +78,74 @@
 	padding: 0 10px;
 }
 
+/* Folder view */
+#app-navigation .path-childs {
+	margin: 0 5px;
+}
+#app-navigation .path-childs li {
+	background-position: left center;
+	background-size: 24px;
+	height: 24px;
+	margin: 5px 0;
+	padding-left: 32px;
+	cursor: pointer;
+}
+#app-navigation .path-childs .path-label {
+	display: inline-block;
+	padding-top: 5px;
+	cursor: pointer;
+}
+#app-navigation .path-childs .path-childs {
+	display: none;
+	margin-left: -16px;
+}
+
+#app-navigation .path-childs .path-childs.active {
+	display: block;
+	background-color: inherit;
+}
+#app-navigation .path-childs .path-label.active {
+	font-weight: bold;
+	background-color: inherit;
+}
+
+/* Content */
+#contents {
+	margin-top: 54px; /* Height of the breadcrumb bar */
+	border-bottom: 1px solid #f5f5f5;
+	padding-bottom: 20px;
+}
+
+#contents .secure-entry {
+	display: block;
+	clear: both;
+	border-top: 1px solid #f5f5f5;
+	padding: 20px;
+}
+#contents .secure-zebra-even {}
+#contents .secure-zebra-odd {}
+
+#contents .secure-entry-name {
+	display: block;
+	float: left;
+	width: 30%;
+	font-weight: bold;
+	padding-bottom: 20px;
+	cursor: pointer;
+}
+#contents .secure-entry-decrypt {
+	display: inline-block;
+	width: 18px;
+	height: 24px;
+	vertical-align: middle;
+	cursor: pointer;
+	background-position: left center;
+}
+#contents .secure-entry-description {
+	display: block;
+	float: left;
+	width: 70%;
+	padding-bottom: 20px;
+	cursor: pointer;
+}
+
