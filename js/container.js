@@ -95,11 +95,17 @@
 		 */
 		_insertContent: function(ev) {
 			$.each(ev.eventData, _.bind(function(k, entry) {
+				// Create the entry
 				var $entry = $('<section class="secure-entry secure-zebra-' + (k%2 ? 'even' : 'odd') + '" id="entry-' + entry.id + '" data-encrypted="' + (entry.value === null ? '' : entry.value) + '"></section>');
-				var $name = $('<div class="secure-entry-name">' + entry.name + '</div>').prepend($('<div class="secure-entry-decrypt icon-password svg"> </div>'));
-				var $description = $('<div class="secure-entry-description">' + (entry.description === null ? '' : entry.description) + '</div>');
+				var $name = $('<div class="secure-entry-name-cont"><span class="secure-entry-name">' + entry.name + '</span></div>').prepend($('<div class="secure-entry-decrypt icon-password svg"> </div>'));
+				var $description = $('<div class="secure-entry-description">' + (entry.description === null ? '...' : entry.description) + '</div>');
 				$entry.append($name).append($description);
 				this.$el.append($entry);
+				
+				// Bind events to edit and show the decrypted value
+				$entry.on('click', '.secure-entry-name', _.bind(this._onClickName, this));
+				$entry.on('click', '.secure-entry-description', _.bind(this._onClickDescription, this));
+				$entry.on('click', '.secure-entry-decrypt', _.bind(this._onClickDecrypt, this));
 			}, this));
 		},
  
@@ -110,6 +116,39 @@
 		 */
 		_replaceContent: function(ev) {
 			
+		},
+
+		/**
+		 * Event handler for when clicking on a name to show an edit field.
+		 * 
+		 * @param Object ev The triggered Event
+		 */
+		_onClickName: function(ev) {
+			var $target = $(ev.currentTarget), value = $target.text();
+			var $edit = $('<input type="text" value="' + value + '" />');
+			$target.empty().append($edit);
+			// TODO: bind events to submit the value.
+		},
+
+		/**
+		 * Event handler for when clicking on a description to show an edit field
+		 * 
+		 * @param Object ev The triggered Event
+		 */
+		_onClickDescription: function(ev) {
+			var $target = $(ev.currentTarget), value = $target.text();
+			var $edit = $('<textarea>' + value + '</textarea>');
+			$target.empty().append($edit);
+			// TODO: bind events to submit the value.
+		},
+
+		/**
+		 * Event handler for when clicking on the decrypt icon
+		 * 
+		 * @param Object ev The triggered Event
+		 */
+		_onClickDecrypt: function(ev) {
+			var $target = $(ev.currentTarget);
 		},
 
 		last: null

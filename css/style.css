@@ -111,41 +111,36 @@
 
 /* Content */
 #contents {
-	margin-top: 54px; /* Height of the breadcrumb bar */
+	margin-top: 54px; /* Height of the breadcrumb bar plus some spacing */
 	border-bottom: 1px solid #f5f5f5;
-	padding-bottom: 20px;
 }
 
 #contents .secure-entry {
 	display: block;
 	clear: both;
 	border-top: 1px solid #f5f5f5;
-	padding: 20px;
+	padding: 10px;
 }
 #contents .secure-zebra-even {}
 #contents .secure-zebra-odd {}
 
+#contents .secure-entry-name-cont,
+#contents .secure-entry-description {
+	display: inline-block;
+	vertical-align: middle;
+	min-width: 250px;
+	cursor: pointer;
+}
+
 #contents .secure-entry-name {
-	display: block;
-	float: left;
-	width: 30%;
 	font-weight: bold;
-	padding-bottom: 20px;
 	cursor: pointer;
 }
 #contents .secure-entry-decrypt {
 	display: inline-block;
-	width: 18px;
+	width: 24px;
 	height: 24px;
 	vertical-align: middle;
-	cursor: pointer;
 	background-position: left center;
-}
-#contents .secure-entry-description {
-	display: block;
-	float: left;
-	width: 70%;
-	padding-bottom: 20px;
 	cursor: pointer;
 }
-

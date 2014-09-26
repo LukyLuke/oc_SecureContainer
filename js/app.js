@@ -74,12 +74,19 @@
 		},
  
 		/**
-		 * Event handler if a section is changed (mostly clicked by the user)
+		 * Event handler if a section is changed: Load all entries
 		 * 
 		 * @param Event ev event object which was triggered
 		 */
 		_sectionChanged: function(ev) {
-			console.debug('SectionChanged', ev);
+			var section = ev.eventData.section;
+			var url = OC.generateUrl('/apps/secure_container/list/' + section);
+			$.ajax(url, {
+				type: 'GET',
+				contentType: 'application/json; charset=UTF-8',
+				success: _.bind(this._parseResponse, this),
+				dataType: 'json'
+			});
 		},
 
 		/**
