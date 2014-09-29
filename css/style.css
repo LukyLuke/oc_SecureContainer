@@ -117,6 +117,7 @@
 
 #contents .secure-entry {
 	display: block;
+	position: relative;
 	clear: both;
 	border-top: 1px solid #f5f5f5;
 	padding: 10px;
@@ -127,8 +128,10 @@
 #contents .secure-entry-name-cont,
 #contents .secure-entry-description {
 	display: inline-block;
+	position: relative;
 	vertical-align: middle;
 	min-width: 250px;
+	width: auto;
 	cursor: pointer;
 }
 
@@ -144,3 +147,23 @@
 	background-position: left center;
 	cursor: pointer;
 }
+
+#contents .secure-entry-description textarea {
+	width: 100%;
+	height: auto;
+}
+
+.secure-container-encrypted {
+	background: rgba(200, 50, 50, 0.3);
+	box-shadow: rgba(200, 50, 50, 0.5) 0 0 5px;
+	padding: 5px;
+	position: relative;
+	display: inline-block;
+	width: 100%;
+	cursor: pointer;
+}
+.secure-container-encrypted.decrypted {
+	background: rgba(50, 200, 50, 0.3);
+	box-shadow: rgba(50, 200, 50, 0.5) 0 0 5px;
+}
+

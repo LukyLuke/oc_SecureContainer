@@ -39,10 +39,12 @@ class PageController extends Controller {
 	private $config;
 	private $pathMapper;
 	private $contentMapper;
+	private $trans;
 
 	public function __construct($appName, IRequest $request, $userId, IConfig $config, PathMapper $pathMapper, ContentMapper $contentMapper){
 		parent::__construct($appName, $request);
 		
+		$this->trans = \OC_L10N::get('secure_container');
 		$this->userId = $userId;
 		$this->config = $config;
 		$this->pathMapper = $pathMapper;

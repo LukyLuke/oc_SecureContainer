@@ -19,14 +19,19 @@
  * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-\OCP\Util::addScript('secure_container', '3rdparty/sjcl/sjcl');
+// TODO: This script we have to wrap in a class to pretend it to override t()
+//       and possibly other functions or variables.
+//\OCP\Util::addScript('secure_container', '3rdparty/sjcl/sjcl');
+
 \OCP\Util::addScript('secure_container', 'container');
 \OCP\Util::addScript('secure_container', 'navigation');
 \OCP\Util::addScript('secure_container', 'app');
 
 \OCP\Util::addStyle('secure_container', 'style');
+$l = \OC_L10N::get('secure_container');
 ?>
 
+<script type="text/javascript" src="<?php p(\OCP\Util::linkToAbsolute('secure_container', 'js/3rdparty/jswrapper.php', array('app'=> 'sjcl'))); ?>"></script>
 <div id="app-navigation">
 	<ul class="level-0 path-childs" id="path-childs-0">
 		<?php foreach ($_['navigation'] as $k => $path): ?>

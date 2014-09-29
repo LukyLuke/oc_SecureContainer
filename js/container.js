@@ -10,6 +10,9 @@
 
 /**
  * Utility class for secure_container related navigation operations
+ * 
+ * TODO: Add a possibility to reenter the passphrase and verify it.
+ * TODO: Maybe an option to change the passphrase?
  */
 (function ($, OC) {
 	'use strict'
@@ -24,22 +27,33 @@
 	
 	Container.prototype = {
 		/**
-		 * Currently selected item in the list
+		 * The current selected entry ID
 		 */
 		_activeItem: null,
+		
+		/**
+		 * Current passphraseto use for decryption.
+		 */
+		_activePassphrase: null,
  
 		/**
 		 * The main navigation container
 		 */
 		$el: null,
+ 
+		/**
+		 * The current dialog id which holds the encrypted data.
+		 */
+		_decryptDialogId: -1,
 
 		/**
 		 * Initializes the navigation from the given container
+		 * 
 		 * @param $el element containing the navigation
 		 */
-		initialize: function($el, $bc) {
+		initialize: function($el) {
 			this.$el = $el;
-			this._activeItem = null;
+			this._activePassphrase = null;
 			this._setupEvents();
 		},
 
@@ -77,9 +91,6 @@
 		 * Setup UI events
 		 */
 		_setupEvents: function() {
-			// Event for editing an entry.
-			//this.$el.on('click', 'article', _.bind(this._onClickItem, this));
-			
 			// Events for replace and update content entries
 			this.on('replace', _.bind(this._replaceContent, this));
 			this.on('insert', _.bind(this._insertContent, this));
@@ -124,7 +135,7 @@
 		 * @param Object ev The triggered Event
 		 */
 		_onClickName: function(ev) {
-			var $target = $(ev.currentTarget), value = $target.text();
+			var $target = $(ev.currentTarget), value = $target.text(), $cont = $target.parent().parent();
 			var $edit = $('<input type="text" value="' + value + '" />');
 			$target.empty().append($edit);
 			// TODO: bind events to submit the value.
@@ -136,8 +147,8 @@
 		 * @param Object ev The triggered Event
 		 */
 		_onClickDescription: function(ev) {
-			var $target = $(ev.currentTarget), value = $target.text();
-			var $edit = $('<textarea>' + value + '</textarea>');
+			var $target = $(ev.currentTarget), value = $target.text(), $cont = $target.parent();
+			var $edit = $('<textarea>' + (value == '...' ? '' : value) + '</textarea>');
 			$target.empty().append($edit);
 			// TODO: bind events to submit the value.
 		},
@@ -148,7 +159,121 @@
 		 * @param Object ev The triggered Event
 		 */
 		_onClickDecrypt: function(ev) {
-			var $target = $(ev.currentTarget);
+			var $target = $(ev.currentTarget), $cont = $target.parent().parent(), value = $cont.data('encrypted');
+			var html = $('<div class="secure-container-encrypted">' + value + '</div>');
+			this._activeItem = $cont;
+			
+			// Open an ocdialog-widget and binds the _closeDialog as the "ok" handler
+			var $dialog = OC.dialogs.message(html, t('secure_container', 'Encrypted text'), 'info', OCdialogs.OK_BUTTON, _.bind(this._saveEncrypted, this), true);
+			
+			// This is triggered when the dialog is shown.
+			// Replaces the content with markup and bind to the close event
+			$dialog.done(_.bind(function() {
+				this._decryptDialogId = OCdialogs.dialogsCounter - 1;
+				var $content = $('#oc-dialog-' + this._decryptDialogId + '-content');
+				$content.empty().append(html);
+				
+				// Show the decrypted text
+				$content.on('click', '.secure-container-encrypted', _.bind(function(ev) {
+					var $target = $(ev.currentTarget), enc = $target.hasClass('decrypted');
+					var value = '';
+					try {
+						if (enc) {
+							value = this._encryptText($target.text());
+							$target.text(value);
+							$target.removeClass('decrypted');
+						} else {
+							value = this._decryptText($target.text());
+							$target.text(value);
+							$target.addClass('decrypted');
+						}
+					} catch (e) {
+						// Check e.deffered if you need something
+						console.debug(e);
+					}
+				}, this));
+				
+				// Remove all dialog code after closing
+				$content.on('ocdialogclose', _.bind(this._closeDialog, this));
+			}, this));
+			
+		},
+
+		/**
+		 * Encrypt the given text with a global passphrase
+		 * 
+		 * @param string text Text to encrypt
+		 * 
+		 * @return string
+		 */
+		_encryptText: function(text) {
+			// If there is no passphrase set, we open up a dialog and throw an exception
+			if (this._activePassphrase == null) {
+				throw new this.PassphraseDialogOpenedException( this._showPassphraseDialog() );
+			}
+			
+			return OC_SJCL.sjcl.encrypt(this._activePassphrase, text);
+		},
+
+		/**
+		 * Decrypt the given text with a global passphrase
+		 * 
+		 * @param string text Text to decrypt
+		 * 
+		 * @return string
+		 */
+		_decryptText: function(text) {
+			// If there is no passphrase set, we open up a dialog and throw an exception
+			if (this._activePassphrase == null) {
+				throw new this.PassphraseDialogOpenedException( this._showPassphraseDialog() );
+			}
+			try {
+				return OC_SJCL.sjcl.decrypt(this._activePassphrase, text);
+			} catch(e) {
+				return '';
+			}
+		},
+ 
+		/**
+		 * Opens a passphrase dialog and returns the deffered object
+		 * 
+		 * @return Deffered
+		 */
+		_showPassphraseDialog: function() {
+			return OC.dialogs.prompt(t('secure_container', 'There is currently no passphrase given for the en- and decryption.'), t('secure_container', 'En-/Decryption Passphrase'), _.bind(function(ok, value) {
+				if (ok) {
+					this._activePassphrase = value;
+				}
+			}, this), true, t('secure_container', 'Passphrase'), true);
+		},
+
+		/**
+		 * Simple function used to throw an exception when the Passphrase dialog is opened.
+		 * 
+		 * @param Deffered deffered The Dialogs deffered object.
+		 */
+		PassphraseDialogOpenedException: function(deffered) {
+			this.deffered = deffered;
+			this.message = t('secure_container', 'Passphrase Dialog opened. Enter the Passphrase and redo the action again.');
+		},
+
+		/**
+		 * Saves the encrypted value from the current entry and closes the dialog
+		 */
+		_saveEncrypted: function() {
+			// TODO: Implement
+			this._closeDialog();
+		},
+
+		/**
+		 * Close and destroy the dialog
+		 */
+		_closeDialog: function() {
+			var $target = $('#oc-dialog-' + this._decryptDialogId + '-content'), $widget = $target.ocdialog('widget');
+			$target.ocdialog('destroy');
+			$target.remove();
+			this._decryptDialogId = -1;
+			this._activeItem = null;
 		},
 
 		last: null

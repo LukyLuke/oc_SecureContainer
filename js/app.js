@@ -129,21 +129,6 @@
 		_.defer(function() {
 			OCA.SecureContainer.App.initialize();
 		});
-
-
-
-
-		$('#echo').click(function() {
-			var url = OC.generateUrl('/apps/secure_container/echo');
-			var data = {
-				echo: $('#echo-content').val()
-			};
-
-			$.post(url, data).success(function(response) {
-				$('#echo-result').text(response.echo);
-			});
-			
-		});
 	});
 
 })(jQuery, OC);
