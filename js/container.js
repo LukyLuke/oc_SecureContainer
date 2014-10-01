@@ -107,9 +107,13 @@
 		_insertContent: function(ev) {
 			$.each(ev.eventData, _.bind(function(k, entry) {
 				// Create the entry
-				var $entry = $('<section class="secure-entry secure-zebra-' + (k%2 ? 'even' : 'odd') + '" id="entry-' + entry.id + '" data-encrypted="' + (entry.value === null ? '' : entry.value) + '"></section>');
-				var $name = $('<div class="secure-entry-name-cont"><span class="secure-entry-name">' + entry.name + '</span></div>').prepend($('<div class="secure-entry-decrypt icon-password svg"> </div>'));
+				var $entry = $('<section class="secure-entry secure-zebra-' + (k%2 ? 'even' : 'odd') + '" id="entry-' + entry.id + '"></section>');
+				var $name = $('<div class="secure-entry-name-cont"><span class="secure-entry-name">' + (entry.name === null ? t('Name not set') : entry.name) + '</span></div>').prepend($('<div class="secure-entry-decrypt icon-password svg"> </div>'));
 				var $description = $('<div class="secure-entry-description">' + (entry.description === null ? '...' : entry.description) + '</div>');
+				
+				$entry.data('name', (entry.name === null ? '': entry.name));
+				$entry.data('description', (entry.description === null ? '' : entry.description));
+				$entry.data('encrypted', (entry.value === null ? '' : entry.value));
 				$entry.append($name).append($description);
 				this.$el.append($entry);
 				
@@ -135,10 +139,30 @@
 		 * @param Object ev The triggered Event
 		 */
 		_onClickName: function(ev) {
-			var $target = $(ev.currentTarget), value = $target.text(), $cont = $target.parent().parent();
-			var $edit = $('<input type="text" value="' + value + '" />');
+			var $target = $(ev.currentTarget);
+			this._activeItem = $target.parent().parent();
+			var $edit = $('<input type="text" />').val(this._activeItem.data('name'));
+			
 			$target.empty().append($edit);
-			// TODO: bind events to submit the value.
+			$edit.on({
+				blur: _.bind(function(ev) {
+					ev.stopImmediatePropagation();
+					this._activeItem.data('name', $edit.val());
+					$target.empty().text(this._activeItem.data('name'));
+					this._saveEncrypted();
+				}, this),
+				keydown: _.bind(function(ev) {
+					if (ev.which == 13) {
+						ev.stopImmediatePropagation();
+						this._activeItem.data('name', $edit.val());
+						$target.empty().text(this._activeItem.data('name'));
+						this._saveEncrypted();
+					}
+				}, this),
+				click: function(ev) {
+					ev.stopImmediatePropagation();
+				},
+			});
 		},
 
 		/**
@@ -147,10 +171,22 @@
 		 * @param Object ev The triggered Event
 		 */
 		_onClickDescription: function(ev) {
-			var $target = $(ev.currentTarget), value = $target.text(), $cont = $target.parent();
-			var $edit = $('<textarea>' + (value == '...' ? '' : value) + '</textarea>');
+			var $target = $(ev.currentTarget);
+			this._activeItem = $target.parent();
+			var $edit = $('<textarea style="width:auto;height:auto;" />').val(this._activeItem.data('description'));
+			
 			$target.empty().append($edit);
-			// TODO: bind events to submit the value.
+			$edit.on({
+				blur: _.bind(function(ev) {
+					ev.stopImmediatePropagation();
+					this._activeItem.data('description', $edit.val());
+					$target.empty().text(this._activeItem.data('description'));
+					this._saveEncrypted();
+				}, this),
+				click: function(ev) {
+					ev.stopImmediatePropagation();
+				}
+			});
 		},
 
 		/**
@@ -159,9 +195,8 @@
 		 * @param Object ev The triggered Event
 		 */
 		_onClickDecrypt: function(ev) {
-			var $target = $(ev.currentTarget), $cont = $target.parent().parent(), value = $cont.data('encrypted');
-			var html = $('<div class="secure-container-encrypted">' + value + '</div>');
-			this._activeItem = $cont;
+			var $target = $(ev.currentTarget), html = $('<div class="secure-container-encrypted">' + "\u066D".repeat(10) + '</div>');
+			this._activeItem = $target.parent().parent();
 			
 			// Open an ocdialog-widget and binds the _closeDialog as the "ok" handler
 			var $dialog = OC.dialogs.message(html, t('secure_container', 'Encrypted text'), 'info', OCdialogs.OK_BUTTON, _.bind(this._saveEncrypted, this), true);
@@ -171,32 +206,57 @@
 			$dialog.done(_.bind(function() {
 				this._decryptDialogId = OCdialogs.dialogsCounter - 1;
 				var $content = $('#oc-dialog-' + this._decryptDialogId + '-content');
+				$content.width('auto');
 				$content.empty().append(html);
 				
 				// Show the decrypted text
-				$content.on('click', '.secure-container-encrypted', _.bind(function(ev) {
-					var $target = $(ev.currentTarget), enc = $target.hasClass('decrypted');
-					var value = '';
-					try {
-						if (enc) {
-							value = this._encryptText($target.text());
-							$target.text(value);
-							$target.removeClass('decrypted');
-						} else {
-							value = this._decryptText($target.text());
-							$target.text(value);
-							$target.addClass('decrypted');
-						}
-					} catch (e) {
-						// Check e.deffered if you need something
-						console.debug(e);
-					}
-				}, this));
+				$content.on('click', '.secure-container-encrypted', _.bind(this._encryptDecryptDialogValue, this));
 				
 				// Remove all dialog code after closing
 				$content.on('ocdialogclose', _.bind(this._closeDialog, this));
 			}, this));
+		},
+
+		/**
+		 * Encrypt and Decrypt the text from the dialog
+		 * Only decrypt the encrypted value if decrypt is an Event, not set or true
+		 * 
+		 * @param Event|boolean decrypt If true or an event, the alue is decrypted
+		 */
+		_encryptDecryptDialogValue: function(decrypt) {
+			var $target = $('.secure-container-encrypted'), value;
+			var decrypt = (decrypt == undefined) || ((typeof(decrypt) == 'object') && (decrypt.originalEvent) && (decrypt.originalEvent instanceof Event)) || (typeof(decrypt) == 'boolean' && decrypt);
 			
+			try {
+				if ($target.hasClass('decrypted')) {
+					value = $target.find('textarea').val();
+					value = this._encryptText(value);
+					this._activeItem.data('encrypted', value);
+					$target.removeClass('decrypted');
+					$target.empty();
+					$target.text("\u066D".repeat(10));
+				}
+				else if (decrypt) {
+					value = this._activeItem.data('encrypted');
+					value = this._decryptText(value);
+					$target.addClass('decrypted');
+					$target.empty();
+					$target.append($('<textarea style="width:auto;height:auto;" />'));
+					
+					// Set the value and prevent defaults to not resize the textarea or close the dialog
+					$target.find('textarea').val(value).on({
+						click: function(ev) {
+							ev.stopImmediatePropagation();
+							$target.resize();
+						},
+						keydown: function(ev) {
+							if (ev.which == 13) {
+								ev.stopImmediatePropagation();
+							}
+						}
+					});
+				}
+			} catch (e) {}
 		},
 
 		/**
@@ -211,7 +271,6 @@
 			if (this._activePassphrase == null) {
 				throw new this.PassphraseDialogOpenedException( this._showPassphraseDialog() );
 			}
-			
 			return OC_SJCL.sjcl.encrypt(this._activePassphrase, text);
 		},
 
@@ -261,7 +320,12 @@
 		 * Saves the encrypted value from the current entry and closes the dialog
 		 */
 		_saveEncrypted: function() {
-			// TODO: Implement
+			this._encryptDecryptDialogValue(false);
+			console.info(this._activeItem.data('name'));
+			console.info(this._activeItem.data('description'));
+			console.info(this._activeItem.data('encrypted'));
+			
+			// TODO: Implement save data
 			this._closeDialog();
 		},
 
@@ -269,7 +333,7 @@
 		 * Close and destroy the dialog
 		 */
 		_closeDialog: function() {
-			var $target = $('#oc-dialog-' + this._decryptDialogId + '-content'), $widget = $target.ocdialog('widget');
+			var $target = $('#oc-dialog-' + this._decryptDialogId + '-content');
 			$target.ocdialog('destroy');
 			$target.remove();
 			this._decryptDialogId = -1;
