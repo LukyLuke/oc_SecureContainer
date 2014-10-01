@@ -34,8 +34,9 @@
 		 */
 		_setupEvents: function() {
 			this.navigation.on('createSection', _.bind(this._createSection, this));
-			this.navigation.on('createContent', _.bind(this._createContent, this));
 			this.navigation.on('sectionChanged', _.bind(this._sectionChanged, this));
+			this.navigation.on('createContent', _.bind(this._createContent, this));
+			this.contents.on('saveContent', _.bind(this._saveContent, this));
 		},
  
 		/**
@@ -56,24 +57,6 @@
 		},
 
 		/**
-		 * Event handler for create a new Entry
-		 * 
-		 * @param Event ev The event object which was triggered
-		 */
-		_createContent: function(ev) {
-			var url = OC.generateUrl('/apps/secure_container/save/new');
-			var data = ev.eventData;
-			data.section = this.navigation.getActiveItem();
-			$.ajax(url, {
-				type: 'POST',
-				data: JSON.stringify(data),
-				contentType: 'application/json; charset=UTF-8',
-				success: _.bind(this._parseResponse, this),
-				dataType: 'json'
-			});
-		},
- 
-		/**
 		 * Event handler if a section is changed: Load all entries
 		 * 
 		 * @param Event ev event object which was triggered
@@ -83,6 +66,34 @@
 			var url = OC.generateUrl('/apps/secure_container/list/' + section);
 			$.ajax(url, {
 				type: 'GET',
+				contentType: 'application/json; charset=UTF-8',
+				success: _.bind(this._parseResponse, this),
+				dataType: 'json'
+			});
+		},
+
+		/**
+		 * Event handler for create a new Entry
+		 * 
+		 * @param Event ev The event object which was triggered
+		 */
+		_createContent: function(ev) {
+			ev.id = 'new';
+			this._saveContent(ev);
+		},
+
+		/**
+		 * Event handler for save an Entry
+		 * 
+		 * @param Event ev The event object which was triggered
+		 */
+		_saveContent: function(ev) {
+			var data = ev.eventData;
+			var url = OC.generateUrl('/apps/secure_container/save/' + data.id);
+			data.section = this.navigation.getActiveItem();
+			$.ajax(url, {
+				type: 'POST',
+				data: JSON.stringify(data),
 				contentType: 'application/json; charset=UTF-8',
 				success: _.bind(this._parseResponse, this),
 				dataType: 'json'

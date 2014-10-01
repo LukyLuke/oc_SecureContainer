@@ -108,8 +108,8 @@
 			$.each(ev.eventData, _.bind(function(k, entry) {
 				// Create the entry
 				var $entry = $('<section class="secure-entry secure-zebra-' + (k%2 ? 'even' : 'odd') + '" id="entry-' + entry.id + '"></section>');
-				var $name = $('<div class="secure-entry-name-cont"><span class="secure-entry-name">' + (entry.name === null ? t('Name not set') : entry.name) + '</span></div>').prepend($('<div class="secure-entry-decrypt icon-password svg"> </div>'));
-				var $description = $('<div class="secure-entry-description">' + (entry.description === null ? '...' : entry.description) + '</div>');
+				var $name = $('<div class="secure-entry-name-cont"><span class="secure-entry-name">' + ((entry.name === null) || (entry.name === '') ? t('Name not set') : entry.name) + '</span></div>').prepend($('<div class="secure-entry-decrypt icon-password svg"> </div>'));
+				var $description = $('<div class="secure-entry-description">' + ((entry.description === null) || (entry.description === '') ? '...' : entry.description) + '</div>');
 				
 				$entry.data('name', (entry.name === null ? '': entry.name));
 				$entry.data('description', (entry.description === null ? '' : entry.description));
@@ -163,6 +163,7 @@
 					ev.stopImmediatePropagation();
 				},
 			});
+			$edit.focus();
 		},
 
 		/**
@@ -187,6 +188,7 @@
 					ev.stopImmediatePropagation();
 				}
 			});
+			$edit.focus();
 		},
 
 		/**
@@ -244,7 +246,7 @@
 					$target.append($('<textarea style="width:auto;height:auto;" />'));
 					
 					// Set the value and prevent defaults to not resize the textarea or close the dialog
-					$target.find('textarea').val(value).on({
+					$target.find('textarea').val(value).focus().on({
 						click: function(ev) {
 							ev.stopImmediatePropagation();
 							$target.resize();
@@ -321,11 +323,14 @@
 		 */
 		_saveEncrypted: function() {
 			this._encryptDecryptDialogValue(false);
-			console.info(this._activeItem.data('name'));
-			console.info(this._activeItem.data('description'));
-			console.info(this._activeItem.data('encrypted'));
 			
-			// TODO: Implement save data
+			this.trigger('saveContent', {
+				name: this._activeItem.data('name'),
+				description: this._activeItem.data('description'),
+				value: this._activeItem.data('encrypted'),
+				id: this._activeItem.attr('id').replace(/entry\-/, '')
+			});
+			
 			this._closeDialog();
 		},
 
