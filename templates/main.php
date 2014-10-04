@@ -43,7 +43,7 @@ $l = \OC_L10N::get('secure_container');
 <main id="app-content">
 	<div id="controls">
 		<nav class="breadcrumb">
-			<div class="crumb svg last" data-dir="/">
+			<div class="crumb home svg last" data-dir="0">
 				<a><img class="svg" src="<?php print(\OCP\Util::imagePath('core', 'places/home.svg')); ?>"></a>
 			</div>
 		</nav>

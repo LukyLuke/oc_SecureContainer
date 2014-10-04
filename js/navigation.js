@@ -102,6 +102,14 @@
 			this.$breadcrumb.on('click', '#new a', _.bind(this._onClickNew, this));
 			this.$breadcrumb.on('click', '#new ul li', _.bind(this._onClickNewEntry, this));
 			
+			// Connect home breadcrumb entry to change the path as well
+			this.$breadcrumb.on('click', '.breadcrumb .crumb.home a', _.bind(function(ev) {
+				var $target = $(ev.currentTarget).parent();
+				this.setActiveItem($target.data('dir'));
+				return false;
+			}, this));
+			
+			// Passphrase dialog
 			this.$breadcrumb.on('click', '.icon-toggle', _.bind(function(ev) {
 				var $target = $(ev.currentTarget);
 				if ($target.hasClass('active')) {
@@ -112,6 +120,7 @@
 				}
 			}, this));
 			
+			// Set/Unset the passphrase
 			this.on('passphraseSet', _.bind(function() {
 				$('.icon-toggle', this.$breadcrumb).addClass('active');
 			}, this));
@@ -181,13 +190,27 @@
 		_onSectionChanged:function(ev) {
 			var $selected = this.$el.find('#path-entry-' + ev.eventData.section), $parents = $selected.parents('.icon-filetype-folder');
 			var $bc = $('.breadcrumb', this.$breadcrumb)
-			
 			$('.last', $bc).removeClass('last');
 			$('.child', $bc).remove();
-			$('> .path-label', $parents).each(function(idx, label) {
-				$bc.append($('<div class="crumb child"><a>' + $(label).text() + '</a></div>'));
+			
+			// Create the new breadcrumb
+			$parents.each(function(idx, parent) {
+				var $parent = $(parent);
+				$bc.append($('<div class="crumb child" data-dir="' + $parent.data('id') + '"><a>' + $('> .path-label', $parent).text() + '</a></div>'));
 			});
-			$bc.append($('<div class="crumb child last"><a>' + $('> .path-label', $selected).text() + '</a></div>'));
+			if ($selected.length > 0) {
+				$bc.append($('<div class="crumb child last" data-dir="' + $selected.data('id') + '"><a>' + $('> .path-label', $selected).text() + '</a></div>'));
+			}
+			else {
+				$('.crumb.home', $bc).addClass('last');
+			}
+			
+			// Connect all breadcrumb entries to change the path as well
+			$bc.on('click', '.crumb.child a', _.bind(function(ev) {
+				var $target = $(ev.currentTarget).parent();
+				this.setActiveItem($target.data('dir'));
+				return false;
+			}, this));
 		},
 
 		/**
