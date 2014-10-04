@@ -314,7 +314,9 @@
 						}
 					});
 				}
-			} catch (e) {}
+			} catch (e) {
+				// see "e.deffered" for jQuery.deffered
+			}
 		},
 
 		/**
@@ -347,7 +349,12 @@
 			try {
 				return OC_SJCL.sjcl.decrypt(this._activePassphrase, text);
 			} catch(e) {
-				return '';
+				if (e.message.substring(0, 11) == 'json decode') {
+					return '';
+				}
+				if (e.message.substring(0, 22) == 'ccm: tag doesn\'t match') {
+					throw new this.PassphraseDialogOpenedException( this._showPassphraseDialog() );
+				}
 			}
 		},
  
