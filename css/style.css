@@ -125,8 +125,9 @@
 #contents .secure-zebra-even {}
 #contents .secure-zebra-odd {}
 
-#contents .secure-entry-name-cont,
-#contents .secure-entry-description {
+#contents .secure-entry-name,
+#contents .secure-entry-description,
+#contents .secure-entry-functions {
 	display: inline-block;
 	position: relative;
 	vertical-align: middle;
@@ -137,15 +138,23 @@
 
 #contents .secure-entry-name {
 	font-weight: bold;
-	cursor: pointer;
 }
-#contents .secure-entry-decrypt {
+#contents .secure-entry-functions {
+	min-width: 0;
+	float: right;
+}
+#contents .secure-entry-function {
 	display: inline-block;
-	width: 24px;
 	height: 24px;
+	padding-left: 24px;
+	margin-left: 10px;
 	vertical-align: middle;
 	background-position: left center;
 	cursor: pointer;
+	opacity: 0.3;
+}
+#contents .secure-entry-function:hover {
+	opacity: 1;
 }
 
 #contents .secure-entry-description textarea {

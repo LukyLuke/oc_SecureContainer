@@ -136,6 +136,9 @@ class PageController extends Controller {
 				throw new \Exception('Invalid data posted for create a new entry in SecureContainer.');
 			}
 			
+			// Create the response
+			$response = $this->getResponseSkeleton('content');
+			
 			// Create or Update the entity.
 			if ($this->contentMapper->exists($guid)) {
 				$entity = $this->contentMapper->find($guid);
@@ -144,6 +147,8 @@ class PageController extends Controller {
 				$entity->setValue($data->value);
 				$entity->setDescription($data->description);
 				$entity = $this->contentMapper->update($entity);
+				
+				$this->appendContentEvent('replace', $entity, $response);
 			}
 			else {
 				$entity = new Content();
@@ -153,17 +158,51 @@ class PageController extends Controller {
 				$entity->setValue($data->value);
 				$entity->setDescription($data->description);
 				$entity = $this->contentMapper->insert($entity);
+				
+				$this->appendContentEvent('insert', array($entity), $response);
 			}
-			return new JSONResponse($entity);
+		} catch (\Exception $ex) {
+			return $this->createResponseException($ex, 'content', Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+		
+		$this->registerResponder('xml', function($value) {
+			return new XMLResponse($value);
+		});
+		return new JSONResponse($response);
+	}
+	
+	/**
+	 * Delete a SecureContainer element
+	 * 
+	 * @param string $guid The ID of the entry to get the details from.
+	 * 
+	 * @return JSONResponse|XMLResponse
+	 * 
+	 * @NoAdminRequired
+	 */
+	public function delete($guid) {
+		try {
+			if ($this->contentMapper->exists($guid)) {
+				$entity = $this->contentMapper->find($guid);
+				$this->contentMapper->delete($entity);
+			}
+			else {
+				throw new \Exception('Invalid Entry-ID given to delete.');
+			}
 			
 			// Create the response
 			$response = $this->getResponseSkeleton('content');
-			$this->appendContentEvent('edit', array(
-				'guid' => $entity->getId(),
+			$this->appendContentEvent('delete', array(
+				'guid' => $guid,
 				), $response);
 		} catch (\Exception $ex) {
 			return $this->createResponseException($ex, 'content', Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
+		
+		$this->registerResponder('xml', function($value) {
+			return new XMLResponse($value);
+		});
+		return new JSONResponse($response);
 	}
 	
 	/**
@@ -221,10 +260,14 @@ class PageController extends Controller {
 				'parent' => $entity->getParent(),
 				'name' => $entity->getName(),
 				), $response);
-			return new JSONResponse($response);
 		} catch (\Exception $ex) {
 			return $this->createResponseException($ex, 'section', Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
+		
+		$this->registerResponder('xml', function($value) {
+			return new XMLResponse($value);
+		});
+		return new JSONResponse($response);
 	}
 	
 	/**

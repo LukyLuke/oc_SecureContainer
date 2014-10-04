@@ -37,6 +37,7 @@
 			this.navigation.on('sectionChanged', _.bind(this._sectionChanged, this));
 			this.navigation.on('createContent', _.bind(this._createContent, this));
 			this.contents.on('saveContent', _.bind(this._saveContent, this));
+			this.contents.on('deleteContent', _.bind(this._deleteContent, this));
 		},
  
 		/**
@@ -94,6 +95,23 @@
 			$.ajax(url, {
 				type: 'POST',
 				data: JSON.stringify(data),
+				contentType: 'application/json; charset=UTF-8',
+				success: _.bind(this._parseResponse, this),
+				dataType: 'json'
+			});
+		},
+
+		/**
+		 * Event handler for delete an Entry
+		 * 
+		 * @param Object ev The event object which was triggered
+		 */
+		_deleteContent: function(ev) {
+			var data = ev.eventData;
+			var url = OC.generateUrl('/apps/secure_container/delete/' + data.id);
+			data.section = this.navigation.getActiveItem();
+			$.ajax(url, {
+				type: 'GET',
 				contentType: 'application/json; charset=UTF-8',
 				success: _.bind(this._parseResponse, this),
 				dataType: 'json'

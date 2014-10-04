@@ -37,6 +37,7 @@ $application->registerRoutes($this, array('routes' => array(
 	array('name' => 'page#entries', 'url' => '/list/{path}', 'verb' => 'GET'),
 	array('name' => 'page#show', 'url' => '/get/{guid}', 'verb' => 'GET'),
 	array('name' => 'page#save', 'url' => '/save/{guid}', 'verb' => 'POST'),
+	array('name' => 'page#delete', 'url' => '/delete/{guid}', 'verb' => 'GET'),
 
 	// Routes for the Sections/Pathes
 	array('name' => 'page#sections', 'url' => '/sections', 'verb' => 'GET'),

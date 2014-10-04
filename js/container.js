@@ -94,8 +94,14 @@
 			// Events for replace and update content entries
 			this.on('replace', _.bind(this._replaceContent, this));
 			this.on('insert', _.bind(this._insertContent, this));
+			
 			this.on('clear', _.bind(function() {
 				this.$el.empty();
+			}, this));
+			
+			this.on('delete', _.bind(function(ev) {
+				ev.stopImmediatePropagation();
+				$('#entry-' + ev.eventData.guid).remove();
 			}, this));
 		},
  
@@ -105,22 +111,28 @@
 		 * @param Object ev The triggered Event
 		 */
 		_insertContent: function(ev) {
+			// If we create a new entity, we get it back as the 
 			$.each(ev.eventData, _.bind(function(k, entry) {
 				// Create the entry
 				var $entry = $('<section class="secure-entry secure-zebra-' + (k%2 ? 'even' : 'odd') + '" id="entry-' + entry.id + '"></section>');
-				var $name = $('<div class="secure-entry-name-cont"><span class="secure-entry-name">' + ((entry.name === null) || (entry.name === '') ? t('Name not set') : entry.name) + '</span></div>').prepend($('<div class="secure-entry-decrypt icon-password svg"> </div>'));
+				var $name = $('<div class="secure-entry-name">' + ((entry.name === null) || (entry.name === '') ? t('secure_container', 'Name not set') : entry.name) + '</div>');
 				var $description = $('<div class="secure-entry-description">' + ((entry.description === null) || (entry.description === '') ? '...' : entry.description) + '</div>');
+				var $functions = $('<nav class="secure-entry-functions"></nav>');
+				
+				$functions.append($('<div class="secure-entry-function secure-entry-decrypt icon-password svg">' + t('secure_container', 'Decrypt') + '</div>'));
+				$functions.append($('<div class="secure-entry-function secure-entry-delete icon-delete svg">' + t('secure_container', 'Delete') + '</div>'));
 				
 				$entry.data('name', (entry.name === null ? '': entry.name));
 				$entry.data('description', (entry.description === null ? '' : entry.description));
 				$entry.data('encrypted', (entry.value === null ? '' : entry.value));
-				$entry.append($name).append($description);
+				$entry.append($name).append($description).append($functions);
 				this.$el.append($entry);
 				
 				// Bind events to edit and show the decrypted value
 				$entry.on('click', '.secure-entry-name', _.bind(this._onClickName, this));
 				$entry.on('click', '.secure-entry-description', _.bind(this._onClickDescription, this));
 				$entry.on('click', '.secure-entry-decrypt', _.bind(this._onClickDecrypt, this));
+				$entry.on('click', '.secure-entry-delete', _.bind(this._onClickDelete, this));
 			}, this));
 		},
  
@@ -130,7 +142,45 @@
 		 * @param Object ev The triggered Event
 		 */
 		_replaceContent: function(ev) {
+			if (ev.eventData.id !== undefined) {
+				var $base = $('#entry-' + ev.eventData.id);
+				
+				if (ev.eventData.name !== undefined) {
+					$('.secure-entry-name', $base).text(ev.eventData.name);
+					$base.data('name', ev.eventData.name);
+				}
+				if (ev.eventData.description !== undefined) {
+					$('.secure-entry-description', $base).text(ev.eventData.description);
+					$base.data('description', ev.eventData.description);
+				}
+				if (ev.eventData.value !== undefined) {
+					$base.data('value', ev.eventData.value);
+				}
+				
+				// See below: Opacity is decreased when save some data
+				$base.animate({
+					opacity: 1
+				}, 500);
+			}
+		},
+ 
+		/**
+		 * Delete the currently selected entry after a request if this is wanted
+		 * 
+		 * @param Object ev The triggered Event
+		 */
+		_onClickDelete: function(ev) {
+			var $target = $(ev.currentTarget);
+			this._activeItem = $target.parent().parent();
 			
+			var $dialog = OC.dialogs.confirm(t('secure_container', 'You really want delete this entry?'), t('secure_container', 'Delete selected Entry?'), _.bind(function(ok, value) {
+				if (ok) {
+					this.trigger('deleteContent', {
+						id: this._activeItem.attr('id').replace(/entry\-/, '')
+					});
+					this._activeItem = null;
+				}
+			}, this), true);
 		},
 
 		/**
@@ -140,7 +190,7 @@
 		 */
 		_onClickName: function(ev) {
 			var $target = $(ev.currentTarget);
-			this._activeItem = $target.parent().parent();
+			this._activeItem = $target.parent();
 			var $edit = $('<input type="text" />').val(this._activeItem.data('name'));
 			
 			$target.empty().append($edit);
@@ -301,7 +351,7 @@
 		 * @return Deffered
 		 */
 		_showPassphraseDialog: function() {
-			return OC.dialogs.prompt(t('secure_container', 'There is currently no passphrase given for the en- and decryption.'), t('secure_container', 'En-/Decryption Passphrase'), _.bind(function(ok, value) {
+			return OC.dialogs.prompt(t('secure_container', 'There is currently no passphrase set for the en- and decryption.'), t('secure_container', 'En-/Decryption Passphrase'), _.bind(function(ok, value) {
 				if (ok) {
 					this._activePassphrase = value;
 				}
@@ -331,6 +381,7 @@
 				id: this._activeItem.attr('id').replace(/entry\-/, '')
 			});
 			
+			this._activeItem.css({ opacity: 0.25 });
 			this._closeDialog();
 		},
 
