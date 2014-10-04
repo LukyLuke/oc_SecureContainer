@@ -38,6 +38,19 @@
 			this.navigation.on('createContent', _.bind(this._createContent, this));
 			this.contents.on('saveContent', _.bind(this._saveContent, this));
 			this.contents.on('deleteContent', _.bind(this._deleteContent, this));
+			
+			this.navigation.on('openPassphraseDialog', _.bind(function() {
+				this.contents.trigger('openPassphraseDialog', null);
+			}, this));
+			this.navigation.on('clearPassphrase', _.bind(function() {
+				this.contents.trigger('clearPassphrase', null);
+			}, this));
+			this.contents.on('passphraseSet', _.bind(function() {
+				this.navigation.trigger('passphraseSet', null);
+			}, this));
+			this.contents.on('passphraseUnset', _.bind(function() {
+				this.navigation.trigger('passphraseUnset', null);
+			}, this));
 		},
  
 		/**

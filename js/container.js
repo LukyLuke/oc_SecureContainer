@@ -95,6 +95,12 @@
 			this.on('replace', _.bind(this._replaceContent, this));
 			this.on('insert', _.bind(this._insertContent, this));
 			
+			this.on('openPassphraseDialog', _.bind(this._showPassphraseDialog, this))
+			this.on('clearPassphrase', _.bind(function() {
+				this._activePassphrase = null;
+				this.trigger('passphraseUnset', null);
+			}, this));
+			
 			this.on('clear', _.bind(function() {
 				this.$el.empty();
 			}, this));
@@ -354,6 +360,7 @@
 			return OC.dialogs.prompt(t('secure_container', 'There is currently no passphrase set for the en- and decryption.'), t('secure_container', 'En-/Decryption Passphrase'), _.bind(function(ok, value) {
 				if (ok) {
 					this._activePassphrase = value;
+					this.trigger('passphraseSet', null);
 				}
 			}, this), true, t('secure_container', 'Passphrase'), true);
 		},

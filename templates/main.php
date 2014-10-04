@@ -19,8 +19,8 @@
  * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// TODO: This script we have to wrap in a class to pretend it to override t()
-//       and possibly other functions or variables.
+// This script we have to wrap in a class to pretend it to override t()
+// and possibly other functions or variables. See below.
 //\OCP\Util::addScript('secure_container', '3rdparty/sjcl/sjcl');
 
 \OCP\Util::addScript('secure_container', 'container');
@@ -44,9 +44,7 @@ $l = \OC_L10N::get('secure_container');
 	<div id="controls">
 		<nav class="breadcrumb">
 			<div class="crumb svg last" data-dir="/">
-				<a href="">
-					<img class="svg" src="<?php print(\OCP\Util::imagePath('core', 'places/home.svg')); ?>">
-				</a>
+				<a><img class="svg" src="<?php print(\OCP\Util::imagePath('core', 'places/home.svg')); ?>"></a>
 			</div>
 		</nav>
 		
@@ -62,8 +60,9 @@ $l = \OC_L10N::get('secure_container');
 					</li>
 				</ul>
 			</div>
-		</div>
-	</section>
+		</section>
+		<div class="icon-toggle svg"><?php p($l->t('Passphrase set')); ?></div>
+	</div>
 	<main id="contents">
 	</main>
 </main>

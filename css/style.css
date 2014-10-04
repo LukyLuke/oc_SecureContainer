@@ -78,6 +78,21 @@
 	padding: 0 10px;
 }
 
+#controls .icon-toggle {
+	float: left;
+	display: inline-block;
+	min-width: 44px;
+	height: 44px;
+	line-height: 44px;
+	opacity: 0.2;
+	background-position: left center;
+	padding-left: 22px;
+	margin-left: 10px;
+}
+#controls .icon-toggle.active {
+	opacity: 1;
+}
+
 /* Folder view */
 #app-navigation .path-childs {
 	margin: 0 5px;

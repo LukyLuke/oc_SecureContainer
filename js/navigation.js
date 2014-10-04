@@ -82,6 +82,7 @@
 		 * @param Object data Event data
 		 */
 		trigger: function(eventName, data) {
+			data = data || {};
 			data.section = data.section || this.getActiveItem();
 			this.$el.trigger(new $.Event(eventName, { eventData: data }));
 		},
@@ -95,10 +96,28 @@
 			this.on('sectionChange', _.bind(function(ev) {
 				this.setActiveItem(ev.itemId);
 			}, this));
+			this.on('sectionChanged', _.bind(this._onSectionChanged, this));
 			
 			// Breadcrum menu for create new things
 			this.$breadcrumb.on('click', '#new a', _.bind(this._onClickNew, this));
 			this.$breadcrumb.on('click', '#new ul li', _.bind(this._onClickNewEntry, this));
+			
+			this.$breadcrumb.on('click', '.icon-toggle', _.bind(function(ev) {
+				var $target = $(ev.currentTarget);
+				if ($target.hasClass('active')) {
+					this.trigger('clearPassphrase');
+				}
+				else {
+					this.trigger('openPassphraseDialog');
+				}
+			}, this));
+			
+			this.on('passphraseSet', _.bind(function() {
+				$('.icon-toggle', this.$breadcrumb).addClass('active');
+			}, this));
+			this.on('passphraseUnset', _.bind(function() {
+				$('.icon-toggle', this.$breadcrumb).removeClass('active');
+			}, this));
 		},
 
 		/**
@@ -145,6 +164,8 @@
 
 		/**
 		 * Event handler for when clicking on an item.
+		 * 
+		 * @param Object ev
 		 */
 		_onClickItem: function(ev) {
 			var $target = $(ev.currentTarget);
@@ -153,7 +174,26 @@
 		},
 
 		/**
+		 * Event handler for when a section is changed to update the breadcrumb
+		 * 
+		 * @param Object ev
+		 */
+		_onSectionChanged:function(ev) {
+			var $selected = this.$el.find('#path-entry-' + ev.eventData.section), $parents = $selected.parents('.icon-filetype-folder');
+			var $bc = $('.breadcrumb', this.$breadcrumb)
+			
+			$('.last', $bc).removeClass('last');
+			$('.child', $bc).remove();
+			$('> .path-label', $parents).each(function(idx, label) {
+				$bc.append($('<div class="crumb child"><a>' + $(label).text() + '</a></div>'));
+			});
+			$bc.append($('<div class="crumb child last"><a>' + $('> .path-label', $selected).text() + '</a></div>'));
+		},
+
+		/**
 		 * Event handler for when clicking on the "new" function
+		 * 
+		 * @param Object ev
 		 */
 		_onClickNew: function(ev) {
 			var $target = this.$breadcrumb.find('#new ul');
@@ -166,6 +206,8 @@
 
 		/**
 		 * Event handler for when clicking on an entry inside the"new" menu
+		 * 
+		 * @param Object ev
 		 */
 		_onClickNewEntry: function(ev) {
 			var $target = $(ev.currentTarget), $p = $target.find('p'), label = $p.text();
