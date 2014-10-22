@@ -104,6 +104,7 @@
 	margin: 5px 0;
 	padding-left: 32px;
 	cursor: pointer;
+	display: inline-block;
 }
 #app-navigation .path-childs .path-label {
 	display: inline-block;

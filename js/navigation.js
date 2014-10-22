@@ -83,7 +83,6 @@
 		 */
 		trigger: function(eventName, data) {
 			data = data || {};
-			data.section = data.section || this.getActiveItem();
 			this.$el.trigger(new $.Event(eventName, { eventData: data }));
 		},
 
@@ -91,6 +90,10 @@
 		 * Setup UI events
 		 */
 		_setupEvents: function() {
+			// Folder structure manipulation
+			this.on('update', _.bind(this._replaceSection, this));
+			this.on('insert', _.bind(this._insertSection, this));
+			
 			// Change the path by clicking on a section or by an external event.
 			this.$el.on('click', 'li', _.bind(this._onClickItem, this));
 			this.on('sectionChange', _.bind(function(ev) {
@@ -98,7 +101,7 @@
 			}, this));
 			this.on('sectionChanged', _.bind(this._onSectionChanged, this));
 			
-			// Breadcrum menu for create new things
+			// Breadcrumb menu for create new things
 			this.$breadcrumb.on('click', '#new a', _.bind(this._onClickNew, this));
 			this.$breadcrumb.on('click', '#new ul li', _.bind(this._onClickNewEntry, this));
 			
@@ -214,7 +217,7 @@
 		},
 
 		/**
-		 * Event handler for when clicking on the "new" function
+		 * Event handler for when clicking on the "new" function to show/hide the popup-menu
 		 * 
 		 * @param Object ev
 		 */
@@ -239,21 +242,65 @@
 			var $input = $('<input type="text" value="' + val + '" name="new-' + type + '" />');
 			$p.empty().append($input);
 
-			$input.focus();
-			$input.on('blur', _.bind(function(ev) {
+			$input.focus().select();
+			$input.on('blur keydown', _.bind(function(ev) {
+				// Only grab ENTER
+				if ((ev.type == 'keydown') && (ev.which !== 13)) {
+					return true;
+				}
+
+				// Save the value
 				var value = $input.val();
 				$p.empty().text(label);
 				if (value !== label) {
 					switch (type) {
 						case 'folder':
-							this.trigger('createSection', { name: value });
+							this.trigger('createSection', { section: this.getActiveItem(), name: value });
 							break;
 						case 'container':
-							this.trigger('createContent', { name: value });
+							this.trigger('createContent', { section: this.getActiveItem(), name: value });
 							break;
 					}
 				}
+
+				// Hides the "popup" menu again
 				this._onClickNew();
+			}, this));
+		},
+ 
+		/**
+		 * Insert the section given in the event data
+		 * 
+		 * @param Object ev The triggered Event
+		 */
+		_insertSection: function(ev) {
+			$.each(ev.eventData, _.bind(function(k, entry) {
+				var $parent = $('#path-entry-' + entry.parent), $childs = $('#path-childs-' + entry.parent);
+				if ($parent.length > 0) {
+					// Attach the childs container if not already existing
+					if ($childs.length == 0) {
+						$childs = $('<ul id="path-childs-' + entry.parent + '" class="level-' + $parent.parents('ul.path-childs').length + ' path-childs"></ul>');
+						$parent.append($childs);
+					}
+					
+					// Insert the new child
+					$child = $('<li id="path-entry-' + entry.id + '" class="icon-filetype-folder svg"><span class="path-label">' + entry.name + '</span></li>');
+					$childs.append($child);
+				}
+			}, this));
+		},
+ 
+		/**
+		 * Replaces the section given in the event data with new data
+		 * 
+		 * @param Object ev The triggered Event
+		 */
+		_replaceSection: function(ev) {
+			$.each(ev.eventData, _.bind(function(k, entry) {
+				var $entry = $('#path-entry-' + entry.id + ' > .path-label');
+				if ($entry.length > 0) {
+					$entry.empty().text(entry.name);
+				}
 			}, this));
 		},
  

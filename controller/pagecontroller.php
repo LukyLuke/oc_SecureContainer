@@ -238,12 +238,17 @@ class PageController extends Controller {
 				throw new \Exception('Invalid data posted for create a new path in SecureContainer.');
 			}
 			
+			// Create the response
+			$response = $this->getResponseSkeleton('section');
+			
 			// Create or Update the entity.
 			if ($this->pathMapper->exists($guid)) {
 				$entity = $this->pathMapper->find($guid);
 				$entity->setName($data->name);
 				$entity->setParent(intval($data->section));
 				$entity = $this->pathMapper->update($entity);
+				
+				$this->appendNavigationEvent('update', array($entity), $response);
 			}
 			else {
 				$entity = new Path();
@@ -251,15 +256,10 @@ class PageController extends Controller {
 				$entity->setName($data->name);
 				$entity->setParent(intval($data->section));
 				$entity = $this->pathMapper->insert($entity);
+				
+				$this->appendNavigationEvent('insert', array($entity), $response);
 			}
 			
-			// Create the response
-			$response = $this->getResponseSkeleton('section');
-			$this->appendNavigationEvent('update', array(
-				'guid' => $entity->getId(),
-				'parent' => $entity->getParent(),
-				'name' => $entity->getName(),
-				), $response);
 		} catch (\Exception $ex) {
 			return $this->createResponseException($ex, 'section', Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
