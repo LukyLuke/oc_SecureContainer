@@ -275,7 +275,7 @@
 		 */
 		_insertSection: function(ev) {
 			$.each(ev.eventData, _.bind(function(k, entry) {
-				var $parent = $('#path-entry-' + entry.parent), $childs = $('#path-childs-' + entry.parent);
+				var $child, $parent = $('#path-entry-' + entry.parent), $childs = $('#path-childs-' + entry.parent);
 				if ($parent.length > 0) {
 					// Attach the childs container if not already existing
 					if ($childs.length == 0) {
@@ -285,6 +285,9 @@
 					
 					// Insert the new child
 					$child = $('<li id="path-entry-' + entry.id + '" class="icon-filetype-folder svg"><span class="path-label">' + entry.name + '</span></li>');
+					$child.data('id', entry.id);
+					$child.on('click', _.bind(this._onClickItem, this));
+					$child.append($('<ul id="path-childs-' + entry.id + '" class="level-' + ($parent.parents('ul.path-childs').length + 1) + ' path-childs"></ul>'));
 					$childs.append($child);
 				}
 			}, this));
