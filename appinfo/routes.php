@@ -42,5 +42,6 @@ $application->registerRoutes($this, array('routes' => array(
 	// Routes for the Sections/Pathes
 	array('name' => 'page#sections', 'url' => '/sections', 'verb' => 'GET'),
 	array('name' => 'page#section', 'url' => '/create/{guid}', 'verb' => 'POST'),
+	array('name' => 'page#sectionDelete', 'url' => '/delete_section/{guid}/{move}', 'verb' => 'GET'),
 )));
 

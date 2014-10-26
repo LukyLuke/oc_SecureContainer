@@ -34,6 +34,8 @@
 		 */
 		_setupEvents: function() {
 			this.navigation.on('createSection', _.bind(this._createSection, this));
+			this.navigation.on('changeSection', _.bind(this._changeSection, this));
+			this.navigation.on('deleteSection', _.bind(this._deleteSection, this));
 			this.navigation.on('sectionChanged', _.bind(this._sectionChanged, this));
 			this.navigation.on('createContent', _.bind(this._createContent, this));
 			this.contents.on('saveContent', _.bind(this._saveContent, this));
@@ -52,18 +54,45 @@
 				this.navigation.trigger('passphraseUnset', null);
 			}, this));
 		},
- 
+
 		/**
 		 * Event handler for create a new Section aka Path
 		 * 
 		 * @param Event ev The event object which was triggered
 		 */
 		_createSection: function(ev) {
-			var url = OC.generateUrl('/apps/secure_container/create/new');
+			ev.eventData.section = 'new';
+			this._changeSection(ev);
+		},
+
+		/**
+		 * Event handler for change (and create) a new Section aka Path
+		 * 
+		 * @param Event ev The event object which was triggered
+		 */
+		_changeSection: function(ev) {
+			var data = ev.eventData;
+			var url = OC.generateUrl('/apps/secure_container/create/' + data.section);
 			var data = ev.eventData;
 			$.ajax(url, {
 				type: 'POST',
 				data: JSON.stringify(data),
+				contentType: 'application/json; charset=UTF-8',
+				success: _.bind(this._parseResponse, this),
+				dataType: 'json'
+			});
+		},
+ 
+		/**
+		 * Event handler for delete an Entry
+		 * 
+		 * @param Object ev The event object which was triggered
+		 */
+		_deleteSection: function(ev) {
+			var data = ev.eventData;
+			var url = OC.generateUrl('/apps/secure_container/delete_section/' + data.section + '/' + (data.moveToTrash ? 'true' : 'false'));
+			$.ajax(url, {
+				type: 'GET',
 				contentType: 'application/json; charset=UTF-8',
 				success: _.bind(this._parseResponse, this),
 				dataType: 'json'
@@ -122,7 +151,6 @@
 		_deleteContent: function(ev) {
 			var data = ev.eventData;
 			var url = OC.generateUrl('/apps/secure_container/delete/' + data.id);
-			data.section = this.navigation.getActiveItem();
 			$.ajax(url, {
 				type: 'GET',
 				contentType: 'application/json; charset=UTF-8',

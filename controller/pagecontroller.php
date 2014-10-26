@@ -30,6 +30,7 @@ use \OCP\AppFramework\Http\XMLResponse;
 use \OCP\AppFramework\Controller;
 
 use OCA\secure_container\Db\PathMapper;
+use OCA\secure_container\Db\PathTree;
 use OCA\secure_container\Db\ContentMapper;
 use OCA\secure_container\Db\Path;
 use OCA\secure_container\Db\Content;
@@ -192,9 +193,7 @@ class PageController extends Controller {
 			
 			// Create the response
 			$response = $this->getResponseSkeleton('content');
-			$this->appendContentEvent('delete', array(
-				'guid' => $guid,
-				), $response);
+			$this->appendContentEvent('delete', array('guid' => $guid), $response);
 		} catch (\Exception $ex) {
 			return $this->createResponseException($ex, 'content', Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
@@ -244,8 +243,12 @@ class PageController extends Controller {
 			// Create or Update the entity.
 			if ($this->pathMapper->exists($guid)) {
 				$entity = $this->pathMapper->find($guid);
-				$entity->setName($data->name);
-				$entity->setParent(intval($data->section));
+				if (isset($data->name)) {
+					$entity->setName($data->name);
+				}
+				if (isset($data->parentId)) {
+					$entity->setParent(intval($data->parentId));
+				}
 				$entity = $this->pathMapper->update($entity);
 				
 				$this->appendNavigationEvent('update', array($entity), $response);
@@ -268,6 +271,68 @@ class PageController extends Controller {
 			return new XMLResponse($value);
 		});
 		return new JSONResponse($response);
+	}
+	
+	/**
+	 * Delete a section container and optionally moves the contents into a different folder
+	 * 
+	 * @param string $guid The ID of the path to delete
+	 * @param string $move Boolean string if the contents and subfolders should be moved to trash or deleted
+	 * 
+	 * @return JSONResponse
+	 * 
+	 * @NoAdminRequired
+	 */
+	public function sectionDelete($guid, $move) {
+		try {
+			if ($this->pathMapper->exists($guid)) {
+				$entity = $this->pathMapper->find($guid);
+				$move = (strtolower($move) == 'true');
+				
+				// Get all subfolders and move them to the trash or delete them.
+				if (!$move) {
+					$this->deletePathEntry($entity);
+				}
+				else {
+					$entity->setParent(0);
+					$this->pathMapper->update($entity);
+				}
+			}
+			else {
+				throw new \Exception('Invalid Path-ID ' . $guid . ' given to delete.');
+			}
+			
+			// Create the response
+			$response = $this->getResponseSkeleton('section');
+			$this->appendNavigationEvent('delete', array('id' => $guid), $response);
+		} catch (\Exception $ex) {
+			return $this->createResponseException($ex, 'section', Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+		
+		$this->registerResponder('xml', function($value) {
+			return new XMLResponse($value);
+		});
+		return new JSONResponse($response);
+	}
+	
+	/**
+	 * Removes all path entries and the contents recursively
+	 * 
+	 * @param \OCA\secure_container\Db\Path $path Path to delete
+	 */
+	private function deletePathEntry($path) {
+		// Get all path children and walk down to begin the delete process on deepest level
+		$children = $this->pathMapper->findChildren($path->getId());
+		foreach ($children as $child) {
+			$this->deletePathEntry($child);
+		}
+		
+		// Delete all entries in this path and finally delete the path itself
+		$entries = $this->contentMapper->findAll($path->getId());
+		foreach ($entries as $entry) {
+			$this->contentMapper->delete($entry);
+		}
+		$this->pathMapper->delete($path);
 	}
 	
 	/**

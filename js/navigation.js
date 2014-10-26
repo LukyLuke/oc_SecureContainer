@@ -93,6 +93,7 @@
 			// Folder structure manipulation
 			this.on('update', _.bind(this._replaceSection, this));
 			this.on('insert', _.bind(this._insertSection, this));
+			this.on('delete', _.bind(this._deleteSection, this));
 			
 			// Change the path by clicking on a section or by an external event.
 			this.$el.on('click', 'li', _.bind(this._onClickItem, this));
@@ -100,6 +101,9 @@
 				this.setActiveItem(ev.itemId);
 			}, this));
 			this.on('sectionChanged', _.bind(this._onSectionChanged, this));
+			
+			// Section functions
+			this.$el.on('click', 'li nav.path-menu a', _.bind(this._onClickMenuItem, this));
 			
 			// Breadcrumb menu for create new things
 			this.$breadcrumb.on('click', '#new a', _.bind(this._onClickNew, this));
@@ -284,10 +288,14 @@
 					}
 					
 					// Insert the new child
-					$child = $('<li id="path-entry-' + entry.id + '" class="icon-filetype-folder svg"><span class="path-label">' + entry.name + '</span></li>');
+					$child = $('<li id="path-entry-' + entry.id + '" class="icon-filetype-folder svg"><span class="path-label"><span class="path-label-name">' + entry.name + '</span></span></li>');
 					$child.data('id', entry.id);
+					$child.find('.path-label').append('<nav class="path-menu" data-id="' + entry.id + '"><a href="#" class="path-edit icon-settings svg" data-action="edit">' + t('secure_container', 'Edit') + '</a><a href="#" class="path-delete icon-delete svg" data-action="delete">' + t('secure_container', 'Delete') + '</a></nav>');
+					$child.append('<ul id="path-childs-' + entry.id + '" class="level-' + ($parent.parents('ul.path-childs').length + 1) + ' path-childs"></ul>');
+					
 					$child.on('click', _.bind(this._onClickItem, this));
-					$child.append($('<ul id="path-childs-' + entry.id + '" class="level-' + ($parent.parents('ul.path-childs').length + 1) + ' path-childs"></ul>'));
+					$child.on('click', 'nav.path-menu a', _.bind(this._onClickMenuItem, this));
+					
 					$childs.append($child);
 				}
 			}, this));
@@ -306,7 +314,83 @@
 				}
 			}, this));
 		},
- 
+
+		/**
+		 * Removes the section from the path-tree
+		 * 
+		 * @param Object ev The triggered Event
+		 */
+		_deleteSection: function(ev) {
+			$.each(ev.eventData, function(k, id) {
+				$('#path-entry-' + id).remove();
+			});
+		},
+
+		/**
+		 * Event handler for when clicking on a function on the Path-Functions
+		 * 
+		 * @param Object ev The triggered Event
+		 */
+		_onClickMenuItem: function(ev) {
+			var $target = $(ev.currentTarget), id = $target.parent().data('id');
+			ev.stopImmediatePropagation();
+			
+			switch ($target.data('action')) {
+				case 'edit':
+					this._showPathEdit(id);
+					break;
+				case 'delete':
+					this._deletePath(id);
+					break;
+			}
+			
+			return false;
+		},
+
+		/**
+		 * Shows an edit field for the given section and changes the value after
+		 * 
+		 * @param int id The Path-ID to show the change field for
+		 */
+		_showPathEdit: function(id) {
+			var $edit, $cont = $('#path-entry-' + id + ' > .path-label .path-label-name');
+			if ($cont.length > 0) {
+				$edit = $('<input type="text" value="' + $cont.text() + '" class="path-label-name" />');
+				$edit.on('click', function(ev) { ev.stopImmediatePropagation(); });
+				$edit.on('blur keydown', _.bind(function(ev) {
+					// Only grab ENTER
+					if ((ev.type == 'keydown') && (ev.which !== 13)) {
+						return true;
+					}
+					
+					// Save the value
+					var value = $edit.val();
+					$edit.replaceWith('<span class="path-label-name">' + value + '</span>');
+					this.trigger('changeSection', { section: id, name: value });
+				}, this));
+				
+				$cont.replaceWith($edit);
+				$edit.focus().select();
+			}
+		},
+
+		/**
+		 * Shows a confirm dialog and asks what to do with the entries
+		 * 
+		 * @param int id The Path-ID to delete
+		 */
+		_deletePath: function(id) {
+			var $cont = $('#path-entry-' + id + ' > .path-label .path-label-name');
+			
+			var $dialog = OC.dialogs.confirm(t('secure_container', 'Do you really want to delete this section and all it\'s children?'), t('secure_container', 'Delete'), _.bind(function(ok, value) {
+				if (ok) {
+					var $dialog2 = OC.dialogs.confirm(t('secure_container', 'Shall the folder be moved to the trash instead? If not, the data are lost forever.'), t('secure_container', 'Delete'), _.bind(function(ok, value) {
+						this.trigger('deleteSection', { section: id, moveToTrash: ok });
+					}, this), true);
+				}
+			}, this), true);
+		},
+
 		last: null
 	};
 

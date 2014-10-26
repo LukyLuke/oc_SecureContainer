@@ -110,6 +110,7 @@
 	display: inline-block;
 	padding-top: 5px;
 	cursor: pointer;
+	width: 100%;
 }
 #app-navigation .path-childs .path-childs {
 	display: none;
@@ -124,6 +125,28 @@
 	font-weight: bold;
 	background-color: inherit;
 }
+#app-navigation nav.path-menu {
+	display: none;
+	position: absolute;
+	top: 5px;
+	right: 0;
+}
+#app-navigation nav.path-menu a {
+	background-color: transparent;
+	display: inline-block;
+	width: 0px;
+	height: 16px;
+	padding-left: 16px;
+	overflow: hidden;
+	margin-right: 3px;
+}
+#app-navigation .path-label:hover nav.path-menu {
+	display: block;
+}
+#app-navigation input.path-label-name {
+	margin-top: -5px;
+}
+
 
 /* Content */
 #contents {
