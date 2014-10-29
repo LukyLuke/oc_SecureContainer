@@ -308,7 +308,7 @@
 		 */
 		_replaceSection: function(ev) {
 			$.each(ev.eventData, _.bind(function(k, entry) {
-				var $entry = $('#path-entry-' + entry.id + ' > .path-label');
+				var $entry = $('#path-entry-' + entry.id + ' > .path-label .path-label-name');
 				if ($entry.length > 0) {
 					$entry.empty().text(entry.name);
 				}
@@ -355,12 +355,21 @@
 		_showPathEdit: function(id) {
 			var $edit, $cont = $('#path-entry-' + id + ' > .path-label .path-label-name');
 			if ($cont.length > 0) {
-				$edit = $('<input type="text" value="' + $cont.text() + '" class="path-label-name" />');
+				$edit = $('<input type="text" value="' + $cont.text() + '" class="path-label-name" data-original="' + $cont.text() + '" />');
 				$edit.on('click', function(ev) { ev.stopImmediatePropagation(); });
 				$edit.on('blur keydown', _.bind(function(ev) {
-					// Only grab ENTER
-					if ((ev.type == 'keydown') && (ev.which !== 13)) {
-						return true;
+					// Only grab ENTER and ESC
+					if (ev.type == 'keydown') {
+						// If the user pressed ESC, cancel the edit process.
+						if (ev.which === 27) {
+							$edit.replaceWith('<span class="path-label-name">' + $edit.data('original') + '</span>');
+							return false;
+						}
+						
+						// Return on all except ENTER to let the suer write something :)
+						if (ev.which !== 13) {
+							return true;
+						}
 					}
 					
 					// Save the value
