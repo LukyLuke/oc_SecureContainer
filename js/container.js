@@ -266,7 +266,7 @@
 		_onClickDecrypt: function(ev) {
 			var value, $target = $(ev.currentTarget).parent().parent();
 			this._activeItem = $target;
-			
+
 			// Hide the decrypted container if there is already one
 			var $crypt = $('.secure-container-encrypted', $target);
 			if ($crypt.length > 0) {
@@ -274,47 +274,62 @@
 				$(ev.currentTarget).text(t('secure_container', 'Decrypt'));
 				return;
 			}
-			
+
 			try {
 				value = this._decryptText($target.data('encrypted'));
 				$(ev.currentTarget).text(t('secure_container', 'Hide decrypted'));
 			} catch (ex) {
 				return;
 			}
-			
+
 			// The value could be decrypted, append a new element in _activeItem with it
 			$crypt = $('<div class="secure-container-encrypted">' + value + '</div>');
 			$target.append($crypt);
-			
+
 			// Show the edit field by click on the crytped value container
 			$crypt.on('click', _.bind(function(ev) {
 				// Don't do anything if there is already a textarea in this container
 				if ($('textarea', ev.currentTarget).length > 0) {
 					return;
 				}
-				
+
 				// Create the textarea,append and focus it.
+				value = this._decryptText($target.data('encrypted'));
 				var $edit = $('<textarea />');
 				$crypt.empty().append($edit).addClass('decrypted');
-				$edit.val(value).focus();
-				
+				$edit.val(value).data('original', value).focus();
+
 				// Prevent some gobally registered events on textareas which prevent us
 				// on resizing the textarea
 				$edit.on('click', function(ev) { ev.stopImmediatePropagation(); });
-				
+
 				// Append a submit button to enctrypt and save the new value
-				var $btn = $('<button class="submit">' + t('secure_container', 'Save') + '</button>');
-				$crypt.append($btn);
-				$btn.on('click', _.bind(function(ev) {
+				var $btn1 = $('<button class="submit">' + t('secure_container', 'Save') + '</button>');
+				$crypt.append($btn1);
+				$btn1.on('click', _.bind(function(ev) {
 					ev.stopImmediatePropagation();
 					var value = $edit.val(), enc = this._encryptText(value);
-					this._activeItem.data('encrypted', this._encryptText(value));
+					this._activeItem.data('encrypted', enc);
 					$crypt.removeClass('decrypted');
 					$crypt.empty().text(value);
 					this._saveEncrypted();
 				}, this));
+
+				// Append a cancel button to cancel the edit process
+				var $btn2 = $('<button class="cancel">' + t('secure_container', 'Cancel') + '</button>');
+				$crypt.append($btn2);
+				$btn2.on('click', _.bind(function(ev) {
+					ev.stopImmediatePropagation();
+					var value = $edit.data('original');
+					$crypt.removeClass('decrypted');
+					$crypt.empty().text(value);
+				}, this));
+				$edit.on('keydown', function(ev) {
+					if (ev.which == 27) {
+						$btn2.trigger('click');
+					}
+				});
 			}, this));
-			
 		},
 
 		/**

@@ -8,6 +8,7 @@ $TRANSLATIONS = array(
 	"Hide decrypted" => "Ausblenden",
 	"Delete" => "Löschen",
 	"Save" => "Speichern",
+	"Cancel" => "Abbrechen",
 	"Edit" => "Bearbeiten",
 	"Name not set" => "Name nicht gegeben",
 	"There is currently no passphrase set for the en- and decryption." => "Es ist noch kein Password gesetzt für das Ent- und Verschlüsseln.",
