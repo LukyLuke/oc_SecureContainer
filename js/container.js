@@ -100,6 +100,11 @@
 				this._activePassphrase = null;
 				this.trigger('passphraseUnset', null);
 			}, this));
+			this.on('passphraseSet', _.bind(function() {
+				if (this._activeItem != null) {
+					$('.secure-entry-function.secure-entry-decrypt', this._activeItem).trigger('click');
+				}
+			}, this));
 			
 			this.on('clear', _.bind(function() {
 				this.$el.empty();
@@ -250,73 +255,66 @@
 		/**
 		 * Event handler for when clicking on the decrypt icon
 		 * 
+		 * Try to decrypt the value.If this goes wrong, a PassphraseDialogOpenedException
+		 * is thrown which shows the Passphrase Dialo*g. This Dialog fires the 'passphraseSet'
+		 * event which the calls this function again.
+		 * 
+		 * If the value could be decrypted, it will be shown in a row below the current entry.
+		 * 
 		 * @param Object ev The triggered Event
 		 */
 		_onClickDecrypt: function(ev) {
-			var $target = $(ev.currentTarget), html = $('<div class="secure-container-encrypted">' + "\u066D".repeat(10) + '</div>');
-			this._activeItem = $target.parent().parent();
+			var value, $target = $(ev.currentTarget).parent().parent();
+			this._activeItem = $target;
 			
-			// Open an ocdialog-widget and binds the _closeDialog as the "ok" handler
-			var $dialog = OC.dialogs.message(html, t('secure_container', 'Encrypted text'), 'info', OCdialogs.OK_BUTTON, _.bind(this._saveEncrypted, this), true);
-			
-			// This is triggered when the dialog is shown.
-			// Replaces the content with markup and bind to the close event
-			$dialog.done(_.bind(function() {
-				this._decryptDialogId = OCdialogs.dialogsCounter - 1;
-				var $content = $('#oc-dialog-' + this._decryptDialogId + '-content');
-				$content.width('auto');
-				$content.empty().append(html);
-				
-				// Show the decrypted text
-				$content.on('click', '.secure-container-encrypted', _.bind(this._encryptDecryptDialogValue, this));
-				
-				// Remove all dialog code after closing
-				$content.on('ocdialogclose', _.bind(this._closeDialog, this));
-			}, this));
-		},
-
-		/**
-		 * Encrypt and Decrypt the text from the dialog
-		 * Only decrypt the encrypted value if decrypt is an Event, not set or true
-		 * 
-		 * @param Event|boolean decrypt If true or an event, the alue is decrypted
-		 */
-		_encryptDecryptDialogValue: function(decrypt) {
-			var $target = $('.secure-container-encrypted'), value;
-			var decrypt = (decrypt == undefined) || ((typeof(decrypt) == 'object') && (decrypt.originalEvent) && (decrypt.originalEvent instanceof Event)) || (typeof(decrypt) == 'boolean' && decrypt);
+			// Hide the decrypted container if there is already one
+			var $crypt = $('.secure-container-encrypted', $target);
+			if ($crypt.length > 0) {
+				$crypt.remove();
+				$(ev.currentTarget).text(t('secure_container', 'Decrypt'));
+				return;
+			}
 			
 			try {
-				if ($target.hasClass('decrypted')) {
-					value = $target.find('textarea').val();
-					value = this._encryptText(value);
-					this._activeItem.data('encrypted', value);
-					$target.removeClass('decrypted');
-					$target.empty();
-					$target.text("\u066D".repeat(10));
-				}
-				else if (decrypt) {
-					value = this._activeItem.data('encrypted');
-					value = this._decryptText(value);
-					$target.addClass('decrypted');
-					$target.empty();
-					$target.append($('<textarea style="width:auto;height:auto;" />'));
-					
-					// Set the value and prevent defaults to not resize the textarea or close the dialog
-					$target.find('textarea').val(value).focus().on({
-						click: function(ev) {
-							ev.stopImmediatePropagation();
-							$target.resize();
-						},
-						keydown: function(ev) {
-							if (ev.which == 13) {
-								ev.stopImmediatePropagation();
-							}
-						}
-					});
-				}
-			} catch (e) {
-				// see "e.deffered" for jQuery.deffered
+				value = this._decryptText($target.data('encrypted'));
+				$(ev.currentTarget).text(t('secure_container', 'Hide decrypted'));
+			} catch (ex) {
+				return;
 			}
+			
+			// The value could be decrypted, append a new element in _activeItem with it
+			$crypt = $('<div class="secure-container-encrypted">' + value + '</div>');
+			$target.append($crypt);
+			
+			// Show the edit field by click on the crytped value container
+			$crypt.on('click', _.bind(function(ev) {
+				// Don't do anything if there is already a textarea in this container
+				if ($('textarea', ev.currentTarget).length > 0) {
+					return;
+				}
+				
+				// Create the textarea,append and focus it.
+				var $edit = $('<textarea />');
+				$crypt.empty().append($edit).addClass('decrypted');
+				$edit.val(value).focus();
+				
+				// Prevent some gobally registered events on textareas which prevent us
+				// on resizing the textarea
+				$edit.on('click', function(ev) { ev.stopImmediatePropagation(); });
+				
+				// Append a submit button to enctrypt and save the new value
+				var $btn = $('<button class="submit">' + t('secure_container', 'Save') + '</button>');
+				$crypt.append($btn);
+				$btn.on('click', _.bind(function(ev) {
+					ev.stopImmediatePropagation();
+					var value = $edit.val(), enc = this._encryptText(value);
+					this._activeItem.data('encrypted', this._encryptText(value));
+					$crypt.removeClass('decrypted');
+					$crypt.empty().text(value);
+					this._saveEncrypted();
+				}, this));
+			}, this));
+			
 		},
 
 		/**
@@ -359,12 +357,20 @@
 		},
  
 		/**
-		 * Opens a passphrase dialog and returns the deffered object
+		 * Opens a passphrase dialog and returns the deferred object
 		 * 
 		 * @return Deffered
 		 */
 		_showPassphraseDialog: function() {
-			return OC.dialogs.prompt(t('secure_container', 'There is currently no passphrase set for the en- and decryption.'), t('secure_container', 'En-/Decryption Passphrase'), _.bind(function(ok, value) {
+			var message;
+			if (this._activePassphrase === null) {
+				message = t('secure_container', 'There is currently no passphrase set for the en- and decryption.');
+			}
+			else {
+				message = t('secure_container', 'Wrong Passphrase given, please try it again...');
+			}
+			
+			return OC.dialogs.prompt(message, t('secure_container', 'En-/Decryption Passphrase'), _.bind(function(ok, value) {
 				if (ok) {
 					this._activePassphrase = value;
 					this.trigger('passphraseSet', null);
@@ -375,10 +381,10 @@
 		/**
 		 * Simple function used to throw an exception when the Passphrase dialog is opened.
 		 * 
-		 * @param Deffered deffered The Dialogs deffered object.
+		 * @param Deffered deferred The Dialogs deferred object.
 		 */
-		PassphraseDialogOpenedException: function(deffered) {
-			this.deffered = deffered;
+		PassphraseDialogOpenedException: function(deferred) {
+			this.deferred = deferred;
 			this.message = t('secure_container', 'Passphrase Dialog opened. Enter the Passphrase and redo the action again.');
 		},
 
@@ -386,28 +392,13 @@
 		 * Saves the encrypted value from the current entry and closes the dialog
 		 */
 		_saveEncrypted: function() {
-			this._encryptDecryptDialogValue(false);
-			
 			this.trigger('saveContent', {
 				name: this._activeItem.data('name'),
 				description: this._activeItem.data('description'),
 				value: this._activeItem.data('encrypted'),
 				id: this._activeItem.attr('id').replace(/entry\-/, '')
 			});
-			
 			this._activeItem.css({ opacity: 0.25 });
-			this._closeDialog();
-		},
-
-		/**
-		 * Close and destroy the dialog
-		 */
-		_closeDialog: function() {
-			var $target = $('#oc-dialog-' + this._decryptDialogId + '-content');
-			$target.ocdialog('destroy');
-			$target.remove();
-			this._decryptDialogId = -1;
-			this._activeItem = null;
 		},
 
 		last: null

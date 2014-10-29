@@ -205,17 +205,26 @@
 	height: auto;
 }
 
-.secure-container-encrypted {
-	background: rgba(200, 50, 50, 0.3);
-	box-shadow: rgba(200, 50, 50, 0.5) 0 0 5px;
-	padding: 5px;
+#contents .secure-container-encrypted {
+	background: rgb(250, 240, 230);
+	box-shadow: rgba(250, 240, 230, 0.5) 0 0 5px;
+	letter-spacing: 0.2em;
+	white-space: pre;
+	font-family: Monospace;
+	font-size: 9pt;
 	position: relative;
-	display: inline-block;
-	width: 100%;
 	cursor: pointer;
+	display: block;
+	padding: 5px 10px;
+	margin: 10px 5px 0;
 }
-.secure-container-encrypted.decrypted {
-	background: rgba(50, 200, 50, 0.3);
-	box-shadow: rgba(50, 200, 50, 0.5) 0 0 5px;
+#contents .secure-container-encrypted.decrypted {
+	background: rgba(72, 105, 21, 0.3);
+	box-shadow: rgba(72, 105, 21, 0.5) 0 0 5px;
+	white-space: unset;
 }
 
+#contents .secure-container-encrypted textarea {
+	width: 99%;
+	height: auto;
+}
