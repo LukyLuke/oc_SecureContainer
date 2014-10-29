@@ -36,12 +36,60 @@ use OCA\secure_container\Db\Path;
 use OCA\secure_container\Db\Content;
 
 class PageController extends Controller {
+	/**
+	 * ID to use for the trash folder
+	 * 
+	 * @const int
+	 */
+	const TRASH_PARENT_ID = -1;
+	
+	/**
+	 * The Username from the currently logged in user
+	 * 
+	 * @var int
+	 */
 	private $userId;
+	
+	/**
+	 * Configuration - not used as of now
+	 * 
+	 * @var \OCP\IConfig
+	 */
 	private $config;
+	
+	/**
+	 * Database mapper object for the pathes
+	 * 
+	 * @var \OCA\secure_container\Db\PathMapper
+	 */
 	private $pathMapper;
+	
+	/**
+	 * Database mapper object for the entries
+	 * 
+	 * @var \OCA\secure_container\Db\ContentMapper
+	 */
 	private $contentMapper;
+	
+	/**
+	 * Translation object
+	 * 
+	 * @var \OC_L10N
+	 */
 	private $trans;
 
+	/**
+	 * Instantiate a new PageController.
+	 * 
+	 * @see \OCA\secure_container\AppInfo\App
+	 * 
+	 * @param string $appName The Application name
+	 * @param \OCP\IRequest $request The Request made from the client
+	 * @param string $userId The currently logged in username
+	 * @param \OCP\IConfig $config The configuration object for this instance
+	 * @param \OCA\secure_container\Db\PathMapper $pathMapper Database mapper object for the pathes
+	 * @param \OCA\secure_container\Db\ContentMapper $contentMapper Database mapper object for the entries
+	 */
 	public function __construct($appName, IRequest $request, $userId, IConfig $config, PathMapper $pathMapper, ContentMapper $contentMapper){
 		parent::__construct($appName, $request);
 		
@@ -112,7 +160,11 @@ class PageController extends Controller {
 	 * @NoAdminRequired
 	 */
 	public function show($guid) {
-		$response = (object) array('foo' => 'bar');
+		try {
+			$response = $this->contentMapper->find($guid);
+		} catch (\Exception $ex) {
+			return $this->createResponseException($ex, 'content', Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
 		
 		$this->registerResponder('xml', function($value) {
 			return new XMLResponse($value);
@@ -212,7 +264,7 @@ class PageController extends Controller {
 	 * @NoAdminRequired
 	 */
 	public function sections() {
-		$response = array('foo' => 'bar');
+		$response = $this->pathMapper->findPathTree();
 		
 		$this->registerResponder('xml', function($value) {
 			return new XMLResponse($value);
@@ -294,7 +346,7 @@ class PageController extends Controller {
 					$this->deletePathEntry($entity);
 				}
 				else {
-					$entity->setParent(0);
+					$entity->setParent(self::TRASH_PARENT_ID);
 					$this->pathMapper->update($entity);
 				}
 			}

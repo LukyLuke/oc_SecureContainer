@@ -139,6 +139,10 @@
 	padding-left: 16px;
 	overflow: hidden;
 	margin-right: 3px;
+	opacity: 0.3;
+}
+#app-navigation nav.path-menu a:hover {
+	opacity: 1;
 }
 #app-navigation .path-label:hover nav.path-menu {
 	display: block;

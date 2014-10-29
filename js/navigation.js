@@ -203,10 +203,10 @@
 			// Create the new breadcrumb
 			$parents.each(function(idx, parent) {
 				var $parent = $(parent);
-				$bc.append($('<div class="crumb child" data-dir="' + $parent.data('id') + '"><a>' + $('> .path-label', $parent).text() + '</a></div>'));
+				$bc.append($('<div class="crumb child" data-dir="' + $parent.data('id') + '"><a>' + $('> .path-label .path-label-name', $parent).text() + '</a></div>'));
 			});
 			if ($selected.length > 0) {
-				$bc.append($('<div class="crumb child last" data-dir="' + $selected.data('id') + '"><a>' + $('> .path-label', $selected).text() + '</a></div>'));
+				$bc.append($('<div class="crumb child last" data-dir="' + $selected.data('id') + '"><a>' + $('> .path-label .path-label-name', $selected).text() + '</a></div>'));
 			}
 			else {
 				$('.crumb.home', $bc).addClass('last');

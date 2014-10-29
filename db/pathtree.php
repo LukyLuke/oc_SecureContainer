@@ -24,7 +24,7 @@ namespace OCA\secure_container\Db;
 use \OCA\secure_container\Db\Path;
 use \OCA\secure_container\Db\PathMapper;
 
-class PathTree extends Path implements \Iterator, \Countable {
+class PathTree extends Path implements \Iterator, \Countable,\JsonSerializable {
 	/**
 	 * List of all children.
 	 * 
@@ -66,7 +66,7 @@ class PathTree extends Path implements \Iterator, \Countable {
 	protected function load($path) {
 		try {
 			$path = $this->mapper->find($path);
-			foreach(get_class_vars(get_class($path)) as $property => $v) {
+			foreach (get_class_vars(get_class($path)) as $property => $v) {
 				$this->{$property} = call_user_func(array($path, 'get' . ucfirst($property)));
 			}
 		} catch (\Exception $e) { }
@@ -136,5 +136,22 @@ class PathTree extends Path implements \Iterator, \Countable {
 	public function count($mode = COUNT_NORMAL) {
 		$this->loadChildren();
 		return count($this->children);
+	}
+	
+	/**
+	 * Interface JsonSerializable: Returns a data object which can be json encoded
+	 * 
+	 * @return object
+	 */
+	public function jsonSerialize() {
+		$this->loadChildren();
+		
+		$result = new \stdClass;
+		$result->id = $this->id;
+		$result->name = $this->name;
+		$result->parent = $this->parent;
+		$result->children = $this->children;
+		
+		return $result;
 	}
 }
