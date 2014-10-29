@@ -209,7 +209,7 @@
 	background: rgb(250, 240, 230);
 	box-shadow: rgba(250, 240, 230, 0.5) 0 0 5px;
 	letter-spacing: 0.2em;
-	white-space: pre;
+	white-space: pre-line;
 	font-family: Monospace;
 	font-size: 9pt;
 	position: relative;
