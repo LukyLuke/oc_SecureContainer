@@ -87,7 +87,7 @@ class PathTree extends Path implements \Iterator, \Countable,\JsonSerializable {
 	 */
 	public function rewind() {
 		$this->loadChildren();
-		rewind($this->children);
+		reset($this->children);
 	}
 
 	/**
