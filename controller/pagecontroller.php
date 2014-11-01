@@ -191,7 +191,7 @@ class PageController extends Controller {
 				$entity->setPath(intval($data->section));
 				$entity->setValue($data->value);
 				$entity->setDescription($data->description);
-				$entity = $this->contentMapper->update($entity);
+				$this->contentMapper->update($entity);
 				
 				$this->appendContentEvent('replace', $entity, $response);
 			}
@@ -281,7 +281,7 @@ class PageController extends Controller {
 				if (isset($data->parentId)) {
 					$entity->setParent(intval($data->parentId));
 				}
-				$entity = $this->pathMapper->update($entity);
+				$this->pathMapper->update($entity);
 				
 				$this->appendNavigationEvent('update', array($entity), $response);
 			}
