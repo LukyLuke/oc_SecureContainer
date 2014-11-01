@@ -143,10 +143,6 @@ class PageController extends Controller {
 		$response = $this->getResponseSkeleton('list');
 		$this->appendContentEvent('clear', null, $response);
 		$this->appendContentEvent('insert', $entries, $response);
-		
-		$this->registerResponder('xml', function($value) {
-			return new XMLResponse($value);
-		});
 		return new JSONResponse($response);
 	}
 	
@@ -165,10 +161,6 @@ class PageController extends Controller {
 		} catch (\Exception $ex) {
 			return $this->createResponseException($ex, 'content', Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
-		
-		$this->registerResponder('xml', function($value) {
-			return new XMLResponse($value);
-		});
 		return new JSONResponse($response);
 	}
 	
@@ -217,10 +209,6 @@ class PageController extends Controller {
 		} catch (\Exception $ex) {
 			return $this->createResponseException($ex, 'content', Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
-		
-		$this->registerResponder('xml', function($value) {
-			return new XMLResponse($value);
-		});
 		return new JSONResponse($response);
 	}
 	
@@ -249,10 +237,6 @@ class PageController extends Controller {
 		} catch (\Exception $ex) {
 			return $this->createResponseException($ex, 'content', Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
-		
-		$this->registerResponder('xml', function($value) {
-			return new XMLResponse($value);
-		});
 		return new JSONResponse($response);
 	}
 	
@@ -265,10 +249,6 @@ class PageController extends Controller {
 	 */
 	public function sections() {
 		$response = $this->pathMapper->findPathTree();
-		
-		$this->registerResponder('xml', function($value) {
-			return new XMLResponse($value);
-		});
 		return new JSONResponse($response);
 	}
 	
@@ -314,14 +294,9 @@ class PageController extends Controller {
 				
 				$this->appendNavigationEvent('insert', array($entity), $response);
 			}
-			
 		} catch (\Exception $ex) {
 			return $this->createResponseException($ex, 'section', Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
-		
-		$this->registerResponder('xml', function($value) {
-			return new XMLResponse($value);
-		});
 		return new JSONResponse($response);
 	}
 	
@@ -360,10 +335,6 @@ class PageController extends Controller {
 		} catch (\Exception $ex) {
 			return $this->createResponseException($ex, 'section', Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
-		
-		$this->registerResponder('xml', function($value) {
-			return new XMLResponse($value);
-		});
 		return new JSONResponse($response);
 	}
 	
