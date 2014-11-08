@@ -233,3 +233,14 @@
 	width: 99%;
 	height: auto;
 }
+
+#content-wrapper .drag-n-drop {
+	background: #aaccaa;
+	position: absolute;
+	opacity: 0.4;
+	z-index: 9999;
+	cursor: move;
+}
+#content-wrapper .drag-n-drop div {
+	cursor: move;
+}

@@ -47,6 +47,26 @@
 		_decryptDialogId: -1,
 
 		/**
+		 * State if there is a Drag'n'Drop action in progress or not
+		 */
+		_dragndropActive: false,
+ 
+		/**
+		 * Internal state variable to define if the mouse-position should be catched
+		 */
+		_catchMouseMove: false,
+ 
+		/**
+		 * Internal use for the mousePosition on drag'n'drop
+		 */
+		_mousePosition: null,
+ 
+		/**
+		 * For Drag'n'Drop, use this for the cloned element.
+		 */
+		_clonedItem: null,
+
+		/**
 		 * Initializes the navigation from the given container
 		 * 
 		 * @param $el element containing the navigation
@@ -114,6 +134,42 @@
 				ev.stopImmediatePropagation();
 				$('#entry-' + ev.eventData.guid).remove();
 			}, this));
+			
+			// Events for Drag'n'Drop
+			$(document).on('mouseup', _.bind(function() {
+				this._catchMouseMove = false;
+				if (this._clonedItem != null) {
+					$(this._clonedItem).remove();
+				}
+			}, this));
+			$(window).on('mousemove', _.bind(function(ev) {
+				if (this._catchMouseMove) {
+					this._mousePosition = {
+						x: ev.pageX,
+						y: ev.pageY
+					};
+					this._mouseMoveEvent();
+					return false;
+				}
+			}, this));
+		},
+ 
+		/**
+		 * Called each time on mousemove after the _mousePosition was set
+		 */
+		_mouseMoveEvent: function() {
+			if (this._clonedItem !== null) {
+				if (this._clonedItem.data('attached') === false) {
+					this._clonedItem.data('attached', true);
+					$('#content-wrapper').append(this._clonedItem);
+				}
+				var offset = this._clonedItem.offset(), pos = this._clonedItem.data('mouse');
+				this._clonedItem.css({
+					top: offset.top + this._mousePosition.y - pos.y,
+					left: offset.left + this._mousePosition.x - pos.x
+				});
+				this._clonedItem.data('mouse', this._mousePosition);
+			}
 		},
  
 		/**
@@ -144,6 +200,23 @@
 				$entry.on('click', '.secure-entry-description', _.bind(this._onClickDescription, this));
 				$entry.on('click', '.secure-entry-decrypt', _.bind(this._onClickDecrypt, this));
 				$entry.on('click', '.secure-entry-delete', _.bind(this._onClickDelete, this));
+				
+				// Event for Drag'n'Drop to a different section
+				$entry.on('mousedown', _.bind(function(ev) {
+					ev.stopImmediatePropagation();
+					var offset = $entry.offset(), width = $entry.width();
+					this._catchMouseMove = true;
+					this._clonedItem = $entry.clone();
+					this._clonedItem.find('nav').remove();
+					this._clonedItem.addClass('drag-n-drop');
+					this._clonedItem.data('attached', false);
+					this._clonedItem.data('mouse', { x: ev.pageX, y: ev.pageY });
+					this._clonedItem.css({
+						width: width,
+						top: offset.top,
+						left: offset.left
+					});
+				}, this));
 			}, this));
 		},
  
@@ -200,6 +273,10 @@
 		 * @param Object ev The triggered Event
 		 */
 		_onClickName: function(ev) {
+			if (this._dragndropActive) {
+				return;
+			}
+
 			var $target = $(ev.currentTarget);
 			this._activeItem = $target.parent();
 			var $edit = $('<input type="text" />').val(this._activeItem.data('name'));
@@ -233,6 +310,10 @@
 		 * @param Object ev The triggered Event
 		 */
 		_onClickDescription: function(ev) {
+			if (this._dragndropActive) {
+				return;
+			}
+
 			var $target = $(ev.currentTarget);
 			this._activeItem = $target.parent();
 			var $edit = $('<textarea style="width:auto;height:auto;" />').val(this._activeItem.data('description'));
