@@ -106,7 +106,8 @@
 	cursor: pointer;
 	display: inline-block;
 }
-#app-navigation .path-childs .path-label {
+#app-navigation .path-childs .path-label,
+#app-navigation .path-childs .path-label-name {
 	display: inline-block;
 	padding-top: 5px;
 	cursor: pointer;
@@ -184,13 +185,16 @@
 }
 #contents .secure-entry-functions {
 	min-width: 0;
-	float: right;
+	position: absolute;
+	right: 0;
+	top: 10px;
+	background: white;
 }
 #contents .secure-entry-function {
 	display: inline-block;
 	height: 24px;
 	padding-left: 24px;
-	margin-left: 10px;
+	margin-right: 10px;
 	vertical-align: middle;
 	background-position: left center;
 	cursor: pointer;
@@ -208,8 +212,9 @@
 #contents .secure-container-encrypted {
 	background: rgb(250, 240, 230);
 	box-shadow: rgba(250, 240, 230, 0.5) 0 0 5px;
-	letter-spacing: 0.2em;
-	white-space: pre-line;
+	letter-spacing: 0.1em;
+	white-space: pre-wrap;
+	word-wrap: break-word;
 	font-family: Monospace;
 	font-size: 9pt;
 	position: relative;

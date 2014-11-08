@@ -1,0 +1,29 @@
+/**
+ * Copyright (c) 2014, Lukas Zurschmiede, http://ranta.ch
+ * 
+ * This file is licensed under the Affero General Public License version 3
+ * or later.
+ * 
+ * See the COPYING-README file.
+ */
+@media only screen and (max-width: 1024px) {
+	.secure-entry-functions .secure-entry-function {
+		width: 0px;
+		overflow: hidden;
+	}
+}
+@media only screen and (max-width: 768px) {
+	#controls .icon-toggle {
+		width: 0;
+		min-width: 0;
+		overflow: hidden;
+		position: absolute;
+		right: 10px;
+	}
+	#controls div.crumb {
+		display: none;
+	}
+	#controls div.crumb.last {
+		display: block;
+	}
+}

@@ -28,6 +28,7 @@
 \OCP\Util::addScript('secure_container', 'app');
 
 \OCP\Util::addStyle('secure_container', 'style');
+\OCP\Util::addStyle('secure_container', 'mobile');
 $l = \OC_L10N::get('secure_container');
 ?>
 
