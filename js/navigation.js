@@ -162,20 +162,26 @@
 		 */
 		setActiveItem: function(itemId) {
 			var oldItemId = this._activeItem;
-			if (itemId === this._activeItem) {
-				return;
-			}
-
-			this.$el.find('.active').removeClass('active');
 			this._activeItem = itemId;
 			
-			var $childs = this.$el.find('#path-entry-' + itemId + ' > ul');
-			$childs.parents('ul.path-childs').addClass('active');
-			$childs.addClass('active');
-			this.$el.find('.level-0.path-childs').removeClass('active');
+			// Change the active label
+			this.$el.find('.path-label.active').removeClass('active');
 			this.$el.find('#path-entry-' + itemId + ' > .path-label').addClass('active');
 			
-			this.trigger('sectionChanged', { section: itemId, previousSection: oldItemId});
+			// Add the active class to the child-list and all parents expect the top container
+			var $childs = this.$el.find('#path-entry-' + itemId + ' > ul');
+			$childs.parents('ul.path-childs').addClass('active');
+			this.$el.find('.level-0.path-childs').removeClass('active');
+			
+			// Add or remove the avtive class on the element itself to show/hode the children
+			// Only trigger the event for loading the entries if the previous item was a different one
+			if (oldItemId !== this._activeItem) {
+				$childs.addClass('active');
+				this.trigger('sectionChanged', { section: itemId, previousSection: oldItemId});
+			}
+			else {
+				$childs.toggleClass('active');
+			}
 		},
 
 		/**
@@ -259,7 +265,7 @@
 				if (value !== label) {
 					switch (type) {
 						case 'folder':
-							this.trigger('createSection', { section: this.getActiveItem(), name: value });
+							this.trigger('createSection', { parentId: this.getActiveItem(), name: value });
 							break;
 						case 'container':
 							this.trigger('createContent', { section: this.getActiveItem(), name: value });

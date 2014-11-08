@@ -289,7 +289,7 @@ class PageController extends Controller {
 				$entity = new Path();
 				$entity->setUid($this->userId);
 				$entity->setName($data->name);
-				$entity->setParent(intval($data->section));
+				$entity->setParent(intval($data->parentId));
 				$entity = $this->pathMapper->insert($entity);
 				
 				$this->appendNavigationEvent('insert', array($entity), $response);
