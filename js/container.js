@@ -136,10 +136,30 @@
 			}, this));
 			
 			// Events for Drag'n'Drop
+			this.on('dragAndDrop', _.bind(this._mouseMoveEvent, this));
+			this.on('cancelDragAndDrop', _.bind(function() {
+				this._catchMouseMove = false;
+				if (this._clonedItem !== null) {
+					this._clonedItem.remove();
+					this._clonedItem = null;
+				}
+			}, this));
 			$(document).on('mouseup', _.bind(function() {
 				this._catchMouseMove = false;
 				if (this._clonedItem != null) {
+					this.trigger('dragAndDropEnd', this._clonedItem.data('id'));
 					$(this._clonedItem).remove();
+					this._clonedItem = null;
+					
+					// Becasue the moseEnter/MouseMove/... is not triggered in navigation
+					// when we drag an element, we have to catch the mouseenter event which
+					// is fired after the mouseup event here. Therefore it can happen that
+					// when the mouseup is fired not on a path, that the mouseenter event
+					// there is fired later and an entry is moved. So we cancel the dragndrop
+					// action after 100ms to prevent this unwanted move...
+					setTimeout(_.bind(function() {
+						this.trigger('cancelDragAndDrop');
+					}, this), 100);
 				}
 			}, this));
 			$(window).on('mousemove', _.bind(function(ev) {
@@ -148,8 +168,7 @@
 						x: ev.pageX,
 						y: ev.pageY
 					};
-					this._mouseMoveEvent();
-					return false;
+					this.trigger('dragAndDrop', this._clonedItem);
 				}
 			}, this));
 		},
@@ -203,14 +222,17 @@
 				
 				// Event for Drag'n'Drop to a different section
 				$entry.on('mousedown', _.bind(function(ev) {
-					ev.stopImmediatePropagation();
 					var offset = $entry.offset(), width = $entry.width();
 					this._catchMouseMove = true;
 					this._clonedItem = $entry.clone();
+					this._clonedItem.on('mousemove', function() { return false; });
 					this._clonedItem.find('nav').remove();
+					this._clonedItem.find('.secure-container-encrypted').remove();
 					this._clonedItem.addClass('drag-n-drop');
 					this._clonedItem.data('attached', false);
 					this._clonedItem.data('mouse', { x: ev.pageX, y: ev.pageY });
+					this._clonedItem.data('id', $entry.attr('id').replace(/entry\-/, ''));
+					this._clonedItem.attr('id', $entry.id + '-clone');
 					this._clonedItem.css({
 						width: width,
 						top: offset.top,

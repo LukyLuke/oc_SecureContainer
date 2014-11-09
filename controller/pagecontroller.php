@@ -167,7 +167,7 @@ class PageController extends Controller {
 	/**
 	 * Create and update a SecureContainer element
 	 * 
-	 * @param string $guid The ID of the entry to get the details from.
+	 * @param int $guid The ID of the entry to get the details from.
 	 * 
 	 * @return JSONResponse|XMLResponse
 	 * 
@@ -215,7 +215,7 @@ class PageController extends Controller {
 	/**
 	 * Delete a SecureContainer element
 	 * 
-	 * @param string $guid The ID of the entry to get the details from.
+	 * @param int $guid The ID of the entry to delete
 	 * 
 	 * @return JSONResponse|XMLResponse
 	 * 
@@ -229,6 +229,36 @@ class PageController extends Controller {
 			}
 			else {
 				throw new \Exception('Invalid Entry-ID given to delete.');
+			}
+			
+			// Create the response
+			$response = $this->getResponseSkeleton('content');
+			$this->appendContentEvent('delete', array('guid' => $guid), $response);
+		} catch (\Exception $ex) {
+			return $this->createResponseException($ex, 'content', Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+		return new JSONResponse($response);
+	}
+	
+	/**
+	 * Move a SecureContainer element into an other path
+	 * 
+	 * @param int $guid The ID of the entry to move
+	 * @param int $path The ID of path to move the entry into
+	 * 
+	 * @return JSONResponse|XMLResponse
+	 * 
+	 * @NoAdminRequired
+	 */
+	public function move($guid, $path) {
+		try {
+			if ($this->contentMapper->exists($guid)) {
+				$entity = $this->contentMapper->find($guid);
+				$entity->setPath((int)$path);
+				$this->contentMapper->update($entity);
+			}
+			else {
+				throw new \Exception('Invalid Entry-ID given to move.');
 			}
 			
 			// Create the response

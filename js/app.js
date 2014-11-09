@@ -33,6 +33,7 @@
 		 * Connects all events
 		 */
 		_setupEvents: function() {
+			// Main events for create, update, delete and change
 			this.navigation.on('createSection', _.bind(this._createSection, this));
 			this.navigation.on('changeSection', _.bind(this._changeSection, this));
 			this.navigation.on('deleteSection', _.bind(this._deleteSection, this));
@@ -41,6 +42,20 @@
 			this.contents.on('saveContent', _.bind(this._saveContent, this));
 			this.contents.on('deleteContent', _.bind(this._deleteContent, this));
 			
+			// Drag'n'Drop events of entries onto a path in the navigation
+			this.contents.on('dragAndDrop', _.bind(function(ev) {
+				this.navigation.trigger('dragAndDropEntry', ev.eventData);
+			}, this));
+			this.contents.on('dragAndDropEnd', _.bind(function(ev) {
+				this.navigation.trigger('dropEntry', ev.eventData);
+			}, this));
+			this.contents.on('cancelDragAndDrop', _.bind(function(ev) {
+				this.navigation.trigger('cancelDragAndDrop', ev.eventData);
+			}, this));
+			this.contents.on('moveContent', _.bind(this._moveContent, this));
+			this.navigation.on('moveContent', _.bind(this._moveContent, this));
+			
+			// Passphrase- and Passphrasedialog-Events
 			this.navigation.on('openPassphraseDialog', _.bind(function() {
 				this.contents.trigger('openPassphraseDialog', null);
 			}, this));
@@ -151,6 +166,22 @@
 		_deleteContent: function(ev) {
 			var data = ev.eventData;
 			var url = OC.generateUrl('/apps/secure_container/delete/' + data.id);
+			$.ajax(url, {
+				type: 'GET',
+				contentType: 'application/json; charset=UTF-8',
+				success: _.bind(this._parseResponse, this),
+				dataType: 'json'
+			});
+		},
+ 
+		/**
+		 * Event handler for delete an Entry
+		 * 
+		 * @param Object ev The event object which was triggered
+		 */
+		_moveContent: function(ev) {
+			var data = ev.eventData;
+			var url = OC.generateUrl('/apps/secure_container/move/' + data.id + '/' + data.path);
 			$.ajax(url, {
 				type: 'GET',
 				contentType: 'application/json; charset=UTF-8',

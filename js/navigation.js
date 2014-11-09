@@ -29,6 +29,16 @@
 		_activeItem: null,
 
 		/**
+		 * This is TRUE if a Drag'n'Drop event is active
+		 */
+		_dragDropActive: false,
+
+		/**
+		 * The Path-ID where the element may be dropped on
+		 */
+		_dragDropElementId: null,
+
+		/**
 		 * The main navigation container
 		 */
 		$el: null,
@@ -39,18 +49,12 @@
 		$breadcrumb: null,
 
 		/**
-		 * Currently selected container
-		 */
-		$currentContent: null,
-
-		/**
 		 * Initializes the navigation from the given container
 		 * @param $el element containing the navigation
 		 */
 		initialize: function($el, $bc) {
 			this.$el = $el;
 			this.$breadcrumb = $bc;
-			this.$currentContent = null;
 			this._activeItem = null;
 			this._setupEvents();
 		},
@@ -134,15 +138,26 @@
 			this.on('passphraseUnset', _.bind(function() {
 				$('.icon-toggle', this.$breadcrumb).removeClass('active');
 			}, this));
-		},
-
-		/**
-		 * Returns the container of the currently active app.
-		 *
-		 * @return app container
-		 */
-		getActiveContainer: function() {
-			return this.$currentContent;
+			
+			// Drag'n'Drop entries
+			this.on('cancelDragAndDrop', _.bind(function() {
+				this._dragDropActive = false;
+				this._dragDropElementId = null;
+			}, this));
+			this.on('dropEntry', _.bind(function(ev) {
+				this._dragDropActive = false;
+				this._dragDropElementId = ev.eventData;
+			}, this));
+			this.on('dragAndDropEntry', _.bind(function(ev) {
+				this._dragDropActive = true;
+			}, this));
+			this.$el.on('mouseenter', 'li .path-label', _.bind(function(ev) {
+				if (this._dragDropElementId !== null) {
+					var pathId = $(ev.currentTarget).parent().data('id');
+					this.trigger('moveContent', { id: this._dragDropElementId, path: pathId });
+					this._dragDropElementId = null;
+				}
+			}, this));
 		},
 
 		/**
