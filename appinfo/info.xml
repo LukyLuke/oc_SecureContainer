@@ -5,7 +5,7 @@
 	<description>Simplystore any kind of data in a encrypted container.</description>
 	<licence>AGPL</licence>
 	<author>Lukas Zurschmiede</author>
-	<version>0.0.3</version>
+	<version>0.0.5</version>
 	<requiremin>7</requiremin>
 	
 	<types>
