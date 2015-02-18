@@ -29,11 +29,13 @@ use \OCP\AppFramework\Http\JSONResponse;
 use \OCP\AppFramework\Http\XMLResponse;
 use \OCP\AppFramework\Controller;
 
-use OCA\secure_container\Db\PathMapper;
-use OCA\secure_container\Db\PathTree;
-use OCA\secure_container\Db\ContentMapper;
-use OCA\secure_container\Db\Path;
-use OCA\secure_container\Db\Content;
+use \OCA\secure_container\Http\ScriptResponse;
+
+use \OCA\secure_container\Db\PathMapper;
+use \OCA\secure_container\Db\PathTree;
+use \OCA\secure_container\Db\ContentMapper;
+use \OCA\secure_container\Db\Path;
+use \OCA\secure_container\Db\Content;
 
 class PageController extends Controller {
 	/**
@@ -127,6 +129,39 @@ class PageController extends Controller {
 		
 		// templates/main.php
 		return new TemplateResponse($this->appName, 'main', $params);
+	}
+
+	/**
+	 * This is a wrapper for retrieve 3rd party scripts.
+	 * 
+	 * @param string $name The 3rd'party script to return.
+	 * 
+	 * @return DataResponse|JSONResponse
+	 * 
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 */
+	public function scriptwrapper($name) {
+		$app_dir = \OC_App::getInstallPath() . DIRECTORY_SEPARATOR . 'secure_container' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . '3rdparty' . DIRECTORY_SEPARATOR;
+		$content = '';
+		$wrapper_function = 'js_wrapper';
+		$wrapper_code = '';
+		
+		switch (strtolower($name)) {
+			case 'sjcl':
+				$file = $app_dir . 'sjcl' . DIRECTORY_SEPARATOR . 'sjcl.js';
+				$content = file_get_contents($file);
+				$wrapper_function = 'OC_SJCL';
+				$wrapper_code = 'this.sjcl = sjcl;';
+				break;
+			default:
+				$content = '';
+		}
+		
+		$response = 'function __' . $wrapper_function . '() { ' . $content . chr(10) . $wrapper_code . ' }' . chr(10);
+		$response .= 'var ' . $wrapper_function . ' = new __' . $wrapper_function . '();';
+		
+		return new ScriptResponse($response);
 	}
 
 	/**

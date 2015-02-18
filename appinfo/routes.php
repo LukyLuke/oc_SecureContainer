@@ -32,6 +32,7 @@ namespace OCA\secure_container\AppInfo;
 $application = new Application();
 $application->registerRoutes($this, array('routes' => array(
 	array('name' => 'page#index', 'url' => '/', 'verb' => 'GET'),
+	array('name' => 'page#scriptwrapper', 'url' => '/script/{name}', 'verb' => 'GET', 'defaults' => array('name' => 'sjcl')),
 	
 	// Routes for the Encrypted containers and entries
 	array('name' => 'page#entries', 'url' => '/list/{path}', 'verb' => 'GET'),

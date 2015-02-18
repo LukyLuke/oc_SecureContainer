@@ -5,8 +5,8 @@
 	<description>Simplystore any kind of data in a encrypted container.</description>
 	<licence>AGPL</licence>
 	<author>Lukas Zurschmiede</author>
-	<version>0.0.5</version>
-	<requiremin>7</requiremin>
+	<version>0.0.6</version>
+	<requiremin>8</requiremin>
 	
 	<types>
 		<!-- Not really, but this is the most matching type -->
