@@ -179,7 +179,16 @@
 	vertical-align: middle;
 	min-width: 250px;
 	width: auto;
+}
+
+#contents .secure-entry-handle {
+	background: url(../img/handle.png) center center repeat;
+	display: inline-block;
+	position: relative;
+	vertical-align: middle;
+	width: 10px;
 	cursor: pointer;
+	margin-right: 5px;
 }
 
 #contents .secure-entry-name {
@@ -209,6 +218,7 @@
 #contents .secure-entry-description textarea {
 	width: 100%;
 	height: auto;
+	resize: vertical;
 }
 
 #contents .secure-container-encrypted {
@@ -234,6 +244,7 @@
 #contents .secure-container-encrypted textarea {
 	width: 99%;
 	height: auto;
+	resize: vertical;
 }
 
 #content-wrapper .drag-n-drop {
@@ -242,7 +253,11 @@
 	opacity: 0.4;
 	z-index: 9999;
 	cursor: move;
+	width: auto;
 }
 #content-wrapper .drag-n-drop div {
-	cursor: move;
+	float: left;
+	padding: 10px;
 }
+
+

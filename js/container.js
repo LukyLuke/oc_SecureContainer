@@ -162,7 +162,9 @@
 					}, this), 100);
 				}
 			}, this));
+			
 			$(window).on('mousemove', _.bind(function(ev) {
+				// Cache the mouse positon and call drag-n-drop
 				if (this._catchMouseMove) {
 					this._mousePosition = {
 						x: ev.pageX,
@@ -170,13 +172,18 @@
 					};
 					this.trigger('dragAndDrop', this._clonedItem);
 				}
+			}, this)).on('mousedown', _.bind(function(ev) {
+				// Disable selection while Drag-n-Drop
+				if (this._catchMouseMove) {
+					ev.preventDefault();
+				}
 			}, this));
 		},
  
 		/**
 		 * Called each time on mousemove after the _mousePosition was set
 		 */
-		_mouseMoveEvent: function() {
+		_mouseMoveEvent: function(ev) {
 			if (this._clonedItem !== null) {
 				if (this._clonedItem.data('attached') === false) {
 					this._clonedItem.data('attached', true);
@@ -201,6 +208,7 @@
 			$.each(ev.eventData, _.bind(function(k, entry) {
 				// Create the entry
 				var $entry = $('<section class="secure-entry secure-zebra-' + (k%2 ? 'even' : 'odd') + '" id="entry-' + entry.id + '"></section>');
+				var $mover = $('<div class="secure-entry-handle">&nbsp;</div>');
 				var $name = $('<div class="secure-entry-name">' + ((entry.name === null) || (entry.name === '') ? t('secure_container', 'Name not set') : entry.name) + '</div>');
 				var $description = $('<div class="secure-entry-description">' + ((entry.description === null) || (entry.description === '') ? '...' : entry.description) + '</div>');
 				var $functions = $('<nav class="secure-entry-functions"></nav>');
@@ -211,7 +219,7 @@
 				$entry.data('name', (entry.name === null ? '': entry.name));
 				$entry.data('description', (entry.description === null ? '' : entry.description));
 				$entry.data('encrypted', (entry.value === null ? '' : entry.value));
-				$entry.append($name).append($description).append($functions);
+				$entry.append($mover).append($name).append($description).append($functions);
 				this.$el.append($entry);
 				
 				// Bind events to edit and show the decrypted value
@@ -221,11 +229,12 @@
 				$entry.on('click', '.secure-entry-delete', _.bind(this._onClickDelete, this));
 				
 				// Event for Drag'n'Drop to a different section
-				$entry.on('mousedown', _.bind(function(ev) {
+				$mover.on('mousedown', _.bind(function(ev) {
 					var offset = $entry.offset(), width = $entry.width();
 					this._catchMouseMove = true;
 					this._clonedItem = $entry.clone();
 					this._clonedItem.on('mousemove', function() { return false; });
+					this._clonedItem.find('.secure-entry-handle').remove();
 					this._clonedItem.find('nav').remove();
 					this._clonedItem.find('.secure-container-encrypted').remove();
 					this._clonedItem.addClass('drag-n-drop');
@@ -234,7 +243,7 @@
 					this._clonedItem.data('id', $entry.attr('id').replace(/entry\-/, ''));
 					this._clonedItem.attr('id', $entry.id + '-clone');
 					this._clonedItem.css({
-						width: width,
+						//width: width,
 						top: offset.top,
 						left: offset.left
 					});
@@ -336,16 +345,19 @@
 				return;
 			}
 
-			var $target = $(ev.currentTarget);
+			var $target = $(ev.currentTarget), $parent = $target.parent(), $func = $parent.find('.secure-entry-functions');
 			this._activeItem = $target.parent();
-			var $edit = $('<textarea style="width:auto;height:auto;" />').val(this._activeItem.data('description'));
+			var $edit = $('<textarea />').val(this._activeItem.data('description'));
 			
+			var w = $parent.width() - $target.position().left - $func.width() - 10;
+			$target.css({ width: w + 'px' });
 			$target.empty().append($edit);
 			$edit.on({
 				blur: _.bind(function(ev) {
 					ev.stopImmediatePropagation();
 					this._activeItem.data('description', $edit.val());
 					$target.empty().text(this._activeItem.data('description'));
+					$target.css({ width: 'auto' });
 					this._saveEncrypted();
 				}, this),
 				click: function(ev) {
