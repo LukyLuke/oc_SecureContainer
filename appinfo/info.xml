@@ -6,7 +6,7 @@
 	<licence>AGPL</licence>
 	<author>Lukas Zurschmiede</author>
 	<version>0.0.6</version>
-	<requiremin>8</requiremin>
+	<requiremin>7</requiremin>
 	
 	<types>
 		<!-- Not really, but this is the most matching type -->
