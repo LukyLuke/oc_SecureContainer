@@ -65,6 +65,11 @@
 		 * For Drag'n'Drop, use this for the cloned element.
 		 */
 		_clonedItem: null,
+ 
+		/**
+		 * 
+		 */
+		_activeSection: null,
 
 		/**
 		 * Initializes the navigation from the given container
@@ -114,6 +119,9 @@
 			// Events for replace and update content entries
 			this.on('replace', _.bind(this._replaceContent, this));
 			this.on('insert', _.bind(this._insertContent, this));
+			this.on('sectionChanged', _.bind(function(ev) {
+				this._activeSection = (typeof ev.eventData.section != undefined) ? ev.eventData.section : null;
+			}, this));
 			
 			this.on('openPassphraseDialog', _.bind(this._showPassphraseDialog, this))
 			this.on('clearPassphrase', _.bind(function() {
@@ -288,12 +296,18 @@
 			var $target = $(ev.currentTarget);
 			this._activeItem = $target.parent().parent();
 			
-			var $dialog = OC.dialogs.confirm(t('secure_container', 'You really want delete this entry?'), t('secure_container', 'Delete selected Entry?'), _.bind(function(ok, value) {
+			var $dialog = OC.dialogs.confirm(t('secure_container', 'You really want to remove this entry?'), t('secure_container', 'Delete selected Entry?'), _.bind(function(ok, value) {
 				if (ok) {
-					this.trigger('deleteContent', {
-						id: this._activeItem.attr('id').replace(/entry\-/, '')
-					});
-					this._activeItem = null;
+					if (this._activeSection === 0) {
+						this.trigger('deleteContent', { id: this._activeItem.attr('id').replace(/entry\-/, ''), moveToTrash: false });
+						this._activeItem = null;
+					}
+					else {
+						var $dialog2 = OC.dialogs.confirm(t('secure_container', 'Shall the entry be moved to trash instead? If not, the data are lost forever.'), t('secure_container', 'Delete'), _.bind(function(ok, value) {
+							this.trigger('deleteContent', { id: this._activeItem.attr('id').replace(/entry\-/, ''), moveToTrash: ok });
+							this._activeItem = null;
+						}, this), true);
+					}
 				}
 			}, this), true);
 		},

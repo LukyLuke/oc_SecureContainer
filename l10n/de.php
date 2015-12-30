@@ -17,7 +17,10 @@ $TRANSLATIONS = array(
 	"New Folder" => "Neues Verzeichnis",
 	"New Crypto-Entry" => "Neuer Eintrag",
 	"Passphrase set" => "Passwort gesetzt",
-	"Do you really want to delete this section and all it's children?" => "Soll de Ordner und alle Unterordner sowie deren Inhalte gelöscht werden?",
-	"Shall the folder be moved to the trash instead? If not, the data are lost forever." => "Soll der Ordner in den Papierkorb verschoben werden? Löschen entfernt alles unwiederruflich.",
+	"You really want to remove this entry?" => "Soll dieser Eintrag wirklich entfernt werden?",
+	"Shall the entry be moved to trash instead? If not, the data are lost forever." => "Soll der Eintrag in den Papierkorb verschoben werden? Wenn nicht, wird er für immer gelöscht.",
+	"Do you really want to remove this section and all it's children?" => "Soll de Ordner und alle Unterordner sowie deren Inhalte gelöscht werden?",
+	"Shall the entries be moved to trash instead? If not, the data are lost forever." => "Soll der Ordner in den Papierkorb verschoben werden? Löschen entfernt alles unwiederruflich.",
+	"Trash" => "Papierkorb",
 );
 $PLURAL_FORMS = "nplurals=2; plural=(n != 1);";

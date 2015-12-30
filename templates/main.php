@@ -35,6 +35,7 @@ $l = \OC_L10N::get('secure_container');
 <script type="text/javascript" src="<?php p(\OCP\Util::linkToRoute('secure_container.page.scriptwrapper', array('name'=> 'sjcl'))); ?>"></script>
 <div id="app-navigation">
 	<ul class="level-0 path-childs" id="path-childs-0">
+		<?php print_unescaped($this->inc('trashentry', array('path' => 0, 'level'=> 0))); ?>
 		<?php foreach ($_['navigation'] as $k => $path): ?>
 		<?php print_unescaped($this->inc('pathentry', array('path' => $path, 'level'=> 1))); ?>
 		<?php endforeach; ?>

@@ -103,6 +103,7 @@
 			this.$el.on('click', 'li', _.bind(this._onClickItem, this));
 			this.on('sectionChange', _.bind(function(ev) {
 				this.setActiveItem(ev.itemId);
+				this.trigger('');
 			}, this));
 			this.on('sectionChanged', _.bind(this._onSectionChanged, this));
 			
@@ -166,7 +167,7 @@
 		 * @return item ID
 		 */
 		getActiveItem: function() {
-			return this._activeItem || '0';
+			return this._activeItem || '-1';
 		},
 
 		/**
@@ -189,10 +190,9 @@
 			this.$el.find('.level-0.path-childs').removeClass('active');
 			
 			// Add or remove the avtive class on the element itself to show/hode the children
-			// Only trigger the event for loading the entries if the previous item was a different one
 			if (oldItemId !== this._activeItem) {
-				$childs.addClass('active');
 				this.trigger('sectionChanged', { section: itemId, previousSection: oldItemId});
+				$childs.addClass('active');
 			}
 			else {
 				$childs.toggleClass('active');
@@ -342,9 +342,13 @@
 		 * @param Object ev The triggered Event
 		 */
 		_deleteSection: function(ev) {
-			$.each(ev.eventData, function(k, id) {
+			$.each(ev.eventData, _.bind(function(k, id) {
 				$('#path-entry-' + id).remove();
-			});
+				if (id == this._activeItem) {
+					this.trigger('sectionDeleted');
+					this._activeItem = null;
+				}
+			}, this));
 		},
 
 		/**
@@ -412,9 +416,9 @@
 		_deletePath: function(id) {
 			var $cont = $('#path-entry-' + id + ' > .path-label .path-label-name');
 			
-			var $dialog = OC.dialogs.confirm(t('secure_container', 'Do you really want to delete this section and all it\'s children?'), t('secure_container', 'Delete'), _.bind(function(ok, value) {
+			var $dialog = OC.dialogs.confirm(t('secure_container', 'Do you really want to remove this section and all it\'s children?'), t('secure_container', 'Delete'), _.bind(function(ok, value) {
 				if (ok) {
-					var $dialog2 = OC.dialogs.confirm(t('secure_container', 'Shall the folder be moved to the trash instead? If not, the data are lost forever.'), t('secure_container', 'Delete'), _.bind(function(ok, value) {
+					var $dialog2 = OC.dialogs.confirm(t('secure_container', 'Shall the entries be moved to trash instead? If not, the data are lost forever.'), t('secure_container', 'Delete'), _.bind(function(ok, value) {
 						this.trigger('deleteSection', { section: id, moveToTrash: ok });
 					}, this), true);
 				}

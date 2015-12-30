@@ -43,7 +43,7 @@ class PageController extends Controller {
 	 * 
 	 * @const int
 	 */
-	const TRASH_PARENT_ID = -1;
+	const TRASH_PARENT_ID = 0;
 	
 	/**
 	 * The Username from the currently logged in user
@@ -182,6 +182,23 @@ class PageController extends Controller {
 	}
 	
 	/**
+	 * Simple method which posts back all entries from inside a path.
+	 * 
+	 * @param string $path Path to return the main elements from
+	 * 
+	 * @return JSONResponse|XMLResponse
+	 * 
+	 * @NoAdminRequired
+	 */
+	public function trash($path) {
+		$entries = $this->contentMapper->findAll(-1);
+		$response = $this->getResponseSkeleton('list');
+		$this->appendContentEvent('clear', null, $response);
+		$this->appendContentEvent('insert', $entries, $response);
+		return new JSONResponse($response);
+	}
+	
+	/**
 	 * Returns a single SecureContainer entry
 	 * 
 	 * @param string $guid The ID of the entry to get the details from.
@@ -257,21 +274,44 @@ class PageController extends Controller {
 	 * @NoAdminRequired
 	 */
 	public function delete($guid) {
+		// Check for a valid post data format
+		$data = (object) $this->request->post;
+		if (!is_object($data) || !isset($data->id)) {
+			throw new \Exception('Invalid data posted for remove an entry in SecureContainer.');
+		}
+		if (!isset($data->moveToTrash) || ($data->moveToTrash === TRUE)) {
+			return $this->move($guid, self::TRASH_PARENT_ID);
+		}
+		else {
+			return $this->shredder($guid);
+		}
+	}
+	
+	/**
+	 * Completely trashes (delete) a SecureContainer Element
+	 *
+	 * @param int $guid The ID of the entry to shredder
+	 *
+	 * @return JSONResponse|XMLResponse
+	 *
+	 * @NoAdminRequired
+	 */
+	public function shredder($guid) {
 		try {
 			if ($this->contentMapper->exists($guid)) {
 				$entity = $this->contentMapper->find($guid);
 				$this->contentMapper->delete($entity);
 			}
 			else {
-				throw new \Exception('Invalid Entry-ID given to delete.');
+				throw new \Exception('Invalid Entry-ID given to shredder.');
 			}
-			
-			// Create the response
-			$response = $this->getResponseSkeleton('content');
-			$this->appendContentEvent('delete', array('guid' => $guid), $response);
 		} catch (\Exception $ex) {
 			return $this->createResponseException($ex, 'content', Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
+		
+		// Create the response
+		$response = $this->getResponseSkeleton('content');
+		$this->appendContentEvent('delete', array('guid' => $guid), $response);
 		return new JSONResponse($response);
 	}
 	
@@ -369,26 +409,23 @@ class PageController extends Controller {
 	 * Delete a section container and optionally moves the contents into a different folder
 	 * 
 	 * @param string $guid The ID of the path to delete
-	 * @param string $move Boolean string if the contents and subfolders should be moved to trash or deleted
 	 * 
 	 * @return JSONResponse
 	 * 
 	 * @NoAdminRequired
 	 */
-	public function sectionDelete($guid, $move) {
+	public function sectionDelete($guid) {
 		try {
+			// Check for a valid post data format
+			$data = (object) $this->request->post;
+			if (!is_object($data) || !isset($data->section)) {
+				throw new \Exception('Invalid data posted for remove a section in SecureContainer.');
+			}
+			$move = !isset($data->moveToTrash) || ($data->moveToTrash ==! false);
+			
 			if ($this->pathMapper->exists($guid)) {
 				$entity = $this->pathMapper->find($guid);
-				$move = (strtolower($move) == 'true');
-				
-				// Get all subfolders and move them to the trash or delete them.
-				if (!$move) {
-					$this->deletePathEntry($entity);
-				}
-				else {
-					$entity->setParent(self::TRASH_PARENT_ID);
-					$this->pathMapper->update($entity);
-				}
+				$this->deletePathEntry($entity, $move);
 			}
 			else {
 				throw new \Exception('Invalid Path-ID ' . $guid . ' given to delete.');
@@ -407,18 +444,25 @@ class PageController extends Controller {
 	 * Removes all path entries and the contents recursively
 	 * 
 	 * @param \OCA\secure_container\Db\Path $path Path to delete
+	 * @param boolean $move Move the entries to the trash instead of delete
 	 */
-	private function deletePathEntry($path) {
+	private function deletePathEntry($path, $move) {
 		// Get all path children and walk down to begin the delete process on deepest level
 		$children = $this->pathMapper->findChildren($path->getId());
 		foreach ($children as $child) {
-			$this->deletePathEntry($child);
+			$this->deletePathEntry($child, $move);
 		}
 		
 		// Delete all entries in this path and finally delete the path itself
 		$entries = $this->contentMapper->findAll($path->getId());
 		foreach ($entries as $entry) {
-			$this->contentMapper->delete($entry);
+			if ($move) {
+				$entry->setPath(self::TRASH_PARENT_ID);
+				$this->contentMapper->update($entry);
+			}
+			else {
+				$this->contentMapper->delete($entry);
+			}
 		}
 		$this->pathMapper->delete($path);
 	}

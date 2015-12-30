@@ -25,7 +25,6 @@
 		initialize: function() {
 			this.navigation = new OCA.SecureContainer.Navigation($('#app-navigation'), $('#controls'));
 			this.contents = new OCA.SecureContainer.Container($('#contents'));
-			
 			this._setupEvents();
 		},
 
@@ -37,10 +36,18 @@
 			this.navigation.on('createSection', _.bind(this._createSection, this));
 			this.navigation.on('changeSection', _.bind(this._changeSection, this));
 			this.navigation.on('deleteSection', _.bind(this._deleteSection, this));
-			this.navigation.on('sectionChanged', _.bind(this._sectionChanged, this));
 			this.navigation.on('createContent', _.bind(this._createContent, this));
 			this.contents.on('saveContent', _.bind(this._saveContent, this));
+			
+			// Change and delete section
 			this.contents.on('deleteContent', _.bind(this._deleteContent, this));
+			this.navigation.on('sectionDeleted', _.bind(function() {
+				this.contents.trigger('clear');
+			}, this));
+			this.navigation.on('sectionChanged', _.bind(function(ev) {
+				this._sectionChanged(ev);
+				this.contents.trigger('sectionChanged', ev.eventData);
+			}, this));
 			
 			// Drag'n'Drop events of entries onto a path in the navigation
 			this.contents.on('dragAndDrop', _.bind(function(ev) {
@@ -105,9 +112,10 @@
 		 */
 		_deleteSection: function(ev) {
 			var data = ev.eventData;
-			var url = OC.generateUrl('/apps/secure_container/delete_section/' + data.section + '/' + (data.moveToTrash ? 'true' : 'false'));
+			var url = OC.generateUrl('/apps/secure_container/delete_section/' + data.section);
 			$.ajax(url, {
-				type: 'GET',
+				type: 'POST',
+				data: JSON.stringify(data),
 				contentType: 'application/json; charset=UTF-8',
 				success: _.bind(this._parseResponse, this),
 				dataType: 'json'
@@ -167,7 +175,8 @@
 			var data = ev.eventData;
 			var url = OC.generateUrl('/apps/secure_container/delete/' + data.id);
 			$.ajax(url, {
-				type: 'GET',
+				type: 'POST',
+				data: JSON.stringify(data),
 				contentType: 'application/json; charset=UTF-8',
 				success: _.bind(this._parseResponse, this),
 				dataType: 'json'
