@@ -384,17 +384,19 @@ class PageController extends Controller {
 					$entity->setName($data->name);
 				}
 				if (isset($data->parentId)) {
-					$entity->setParent(intval($data->parentId));
+					$data->parentId = intval($data->parentId);
+					$entity->setParent($data->parentId < 0 ? 0 : $data->parentId);
 				}
 				$this->pathMapper->update($entity);
 				
 				$this->appendNavigationEvent('update', array($entity), $response);
 			}
 			else {
+				$data->parentId = intval($data->parentId);
 				$entity = new Path();
 				$entity->setUid($this->userId);
 				$entity->setName($data->name);
-				$entity->setParent(intval($data->parentId));
+				$entity->setParent($data->parentId < 0 ? 0 : $data->parentId);
 				$entity = $this->pathMapper->insert($entity);
 				
 				$this->appendNavigationEvent('insert', array($entity), $response);

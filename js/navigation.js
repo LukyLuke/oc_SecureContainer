@@ -301,6 +301,9 @@
 		_insertSection: function(ev) {
 			$.each(ev.eventData, _.bind(function(k, entry) {
 				var $child, $parent = $('#path-entry-' + entry.parent), $childs = $('#path-childs-' + entry.parent);
+				if (entry.parent == 0) {
+						$parent = $('#app-navigation');
+				}
 				if ($parent.length > 0) {
 					// Attach the childs container if not already existing
 					if ($childs.length == 0) {
