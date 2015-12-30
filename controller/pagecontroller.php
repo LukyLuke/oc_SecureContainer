@@ -26,10 +26,10 @@ use \OCP\IConfig;
 use \OCP\AppFramework\Http;
 use \OCP\AppFramework\Http\TemplateResponse;
 use \OCP\AppFramework\Http\JSONResponse;
-use \OCP\AppFramework\Http\XMLResponse;
 use \OCP\AppFramework\Controller;
 
 use \OCA\secure_container\Http\ScriptResponse;
+use \OCA\secure_container\Http\XMLResponse;
 
 use \OCA\secure_container\Db\PathMapper;
 use \OCA\secure_container\Db\PathTree;
@@ -178,7 +178,10 @@ class PageController extends Controller {
 		$response = $this->getResponseSkeleton('list');
 		$this->appendContentEvent('clear', null, $response);
 		$this->appendContentEvent('insert', $entries, $response);
-		return new JSONResponse($response);
+		
+		$this->registerResponder('json', function($val) { return new JSONResponse($val); });
+		$this->registerResponder('xml', function($val) { return new XMLResponse($val); });
+		return $response;
 	}
 	
 	/**
